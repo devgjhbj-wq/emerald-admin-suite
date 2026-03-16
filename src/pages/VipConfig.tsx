@@ -34,9 +34,7 @@ const VipConfig = () => {
     }
   };
 
-  useEffect(() => {
-    loadConfig();
-  }, []);
+  useEffect(() => { loadConfig(); }, []);
 
   const handleSave = async () => {
     setAuthToken(token);
@@ -67,95 +65,62 @@ const VipConfig = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-2xl flex items-center justify-between">
+    <div className="space-y-4">
+      <div className="bg-card border border-border p-4 flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-foreground">VIP Configuration</h2>
-          <p className="text-sm text-muted-foreground mt-1">Configure VIP levels with deposit limits and bonuses</p>
+          <h2 className="text-sm font-semibold text-foreground">VIP Configuration</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">Configure VIP levels with deposit limits and bonuses</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-1.5">
           <Button variant="outline" size="sm" onClick={loadConfig} disabled={loading}>
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
           </Button>
           <Button size="sm" onClick={addLevel}>
-            <Plus className="w-4 h-4" />
+            <Plus className="w-3.5 h-3.5" />
             Add Level
           </Button>
         </div>
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-12">
+        <div className="flex justify-center py-8">
           <Loading />
         </div>
       ) : (
-        <div className="bg-card border border-border rounded-xl overflow-hidden">
+        <div className="bg-card border border-border overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-xs">
               <thead>
                 <tr className="border-b border-border bg-secondary/30">
-                  <th className="text-left p-3 text-muted-foreground font-medium">Level Name</th>
-                  <th className="text-left p-3 text-muted-foreground font-medium">Min Deposit</th>
-                  <th className="text-left p-3 text-muted-foreground font-medium">Daily Withdraw Limit</th>
-                  <th className="text-left p-3 text-muted-foreground font-medium">Monthly Check-in Bonus</th>
-                  <th className="text-left p-3 text-muted-foreground font-medium">Upgrade Reward</th>
-                  <th className="text-left p-3 text-muted-foreground font-medium w-16"></th>
+                  <th className="text-left p-2 text-muted-foreground font-medium">Level Name</th>
+                  <th className="text-left p-2 text-muted-foreground font-medium">Min Deposit</th>
+                  <th className="text-left p-2 text-muted-foreground font-medium">Daily Withdraw Limit</th>
+                  <th className="text-left p-2 text-muted-foreground font-medium">Monthly Check-in Bonus</th>
+                  <th className="text-left p-2 text-muted-foreground font-medium">Upgrade Reward</th>
+                  <th className="text-left p-2 text-muted-foreground font-medium w-10"></th>
                 </tr>
               </thead>
               <tbody>
                 {levels.map((level, i) => (
                   <tr key={i} className="border-b border-border last:border-0">
-                    <td className="p-3">
-                      <Input
-                        value={level.name}
-                        onChange={(e) => updateLevel(i, 'name', e.target.value)}
-                        className="w-32 font-medium"
-                      />
+                    <td className="p-2">
+                      <Input value={level.name} onChange={(e) => updateLevel(i, 'name', e.target.value)} className="w-28 font-medium" />
                     </td>
-                    <td className="p-3">
-                      <Input
-                        type="number"
-                        min={0}
-                        value={level.minDeposit}
-                        onChange={(e) => updateLevel(i, 'minDeposit', e.target.value)}
-                        className="w-32"
-                      />
+                    <td className="p-2">
+                      <Input type="number" min={0} value={level.minDeposit} onChange={(e) => updateLevel(i, 'minDeposit', e.target.value)} className="w-28" />
                     </td>
-                    <td className="p-3">
-                      <Input
-                        type="number"
-                        min={0}
-                        value={level.dailyWithdrawLimit}
-                        onChange={(e) => updateLevel(i, 'dailyWithdrawLimit', e.target.value)}
-                        className="w-32"
-                      />
+                    <td className="p-2">
+                      <Input type="number" min={0} value={level.dailyWithdrawLimit} onChange={(e) => updateLevel(i, 'dailyWithdrawLimit', e.target.value)} className="w-28" />
                     </td>
-                    <td className="p-3">
-                      <Input
-                        type="number"
-                        min={0}
-                        value={level.monthlyCheckinBonus}
-                        onChange={(e) => updateLevel(i, 'monthlyCheckinBonus', e.target.value)}
-                        className="w-32"
-                      />
+                    <td className="p-2">
+                      <Input type="number" min={0} value={level.monthlyCheckinBonus} onChange={(e) => updateLevel(i, 'monthlyCheckinBonus', e.target.value)} className="w-28" />
                     </td>
-                    <td className="p-3">
-                      <Input
-                        type="number"
-                        min={0}
-                        value={level.upgradeReward}
-                        onChange={(e) => updateLevel(i, 'upgradeReward', e.target.value)}
-                        className="w-32"
-                      />
+                    <td className="p-2">
+                      <Input type="number" min={0} value={level.upgradeReward} onChange={(e) => updateLevel(i, 'upgradeReward', e.target.value)} className="w-28" />
                     </td>
-                    <td className="p-3">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => removeLevel(i)}
-                        disabled={levels.length <= 1}
-                      >
-                        <Trash2 className="w-4 h-4 text-destructive" />
+                    <td className="p-2">
+                      <Button variant="ghost" size="icon" onClick={() => removeLevel(i)} disabled={levels.length <= 1}>
+                        <Trash2 className="w-3.5 h-3.5 text-destructive" />
                       </Button>
                     </td>
                   </tr>
@@ -164,9 +129,9 @@ const VipConfig = () => {
             </table>
           </div>
 
-          <div className="flex justify-end p-4 border-t border-border">
-            <Button onClick={handleSave} disabled={saving}>
-              {saving ? <Loading size={16} /> : <Save className="w-4 h-4" />}
+          <div className="flex justify-end p-3 border-t border-border">
+            <Button size="sm" onClick={handleSave} disabled={saving}>
+              {saving ? <Loading size={14} /> : <Save className="w-3.5 h-3.5" />}
               Save Changes
             </Button>
           </div>

@@ -32,7 +32,7 @@ const Dashboard = () => {
 
   if (loading && !stats) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex items-center justify-center h-48">
         <Loading />
       </div>
     );
@@ -44,18 +44,18 @@ const Dashboard = () => {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex justify-end">
         <LastUpdated timestamp={updatedAt} onRefresh={load} loading={loading} />
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {cards.map((c) => (
-          <div key={c.label} className="bg-card border border-border rounded-xl p-6 hover:border-primary/30 transition-colors">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-sm text-muted-foreground">{c.label}</span>
-              <c.icon className="w-5 h-5 text-muted-foreground" />
+          <div key={c.label} className="bg-card border border-border p-4 hover:border-primary/30 transition-colors">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-muted-foreground">{c.label}</span>
+              <c.icon className="w-4 h-4 text-muted-foreground" />
             </div>
-            <p className="text-3xl font-bold text-foreground">{c.value}</p>
+            <p className="text-2xl font-bold text-foreground">{c.value}</p>
           </div>
         ))}
       </div>

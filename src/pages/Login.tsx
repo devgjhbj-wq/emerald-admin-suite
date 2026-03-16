@@ -33,7 +33,6 @@ const LoginPage = () => {
       const token = data.token || data.jwt || data.accessToken;
       const user = data.user || data;
 
-      // Check admin flag
       if (!user.admin) {
         toast.error('Access denied: Admins only');
         return;
@@ -66,31 +65,31 @@ const LoginPage = () => {
       className="min-h-screen flex items-center justify-center bg-cover bg-center bg-no-repeat p-4"
       style={{ backgroundImage: `url(${bglogo})` }}
     >
-      <div className="absolute inset-0  " />
+      <div className="absolute inset-0" />
 
-      <div className="relative z-10 w-full max-w-md">
-        <Card className="bg-card/60 backdrop-blur-xl border-border rounded-2xl p-8 shadow-2xl">
-          <div className="flex flex-col items-center mb-8">
-            <img src={logo} alt="Logo" className="w-16 h-16 mb-4 rounded-xl" />
-            <h1 className="text-2xl font-bold text-foreground tracking-tight">Admin Login</h1>
-            <p className="text-sm text-muted-foreground mt-1">Management Panel Access</p>
+      <div className="relative z-10 w-full max-w-sm">
+        <Card className="bg-card/60 backdrop-blur-xl border-border p-6 shadow-2xl">
+          <div className="flex flex-col items-center mb-6">
+            <img src={logo} alt="Logo" className="w-12 h-12 mb-3" />
+            <h1 className="text-lg font-bold text-foreground tracking-tight">Admin Login</h1>
+            <p className="text-xs text-muted-foreground mt-0.5">Management Panel Access</p>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-5">
-            <div className="space-y-2">
-              <Label className="text-muted-foreground text-sm">Mobile Number</Label>
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div className="space-y-1.5">
+              <Label className="text-muted-foreground text-xs">Mobile Number</Label>
               <Input
                 type="tel"
                 placeholder="Enter mobile number"
                 value={mobile}
                 onChange={(e) => setMobile(e.target.value)}
                 required
-                className="bg-secondary/50 text-foreground placeholder:text-muted-foreground border-border text-sm"
+                className="bg-secondary/50 text-foreground placeholder:text-muted-foreground border-border"
               />
             </div>
 
-            <div className="space-y-2">
-              <Label className="text-muted-foreground text-sm">Password</Label>
+            <div className="space-y-1.5">
+              <Label className="text-muted-foreground text-xs">Password</Label>
               <div className="relative">
                 <Input
                   type={showPassword ? 'text' : 'password'}
@@ -98,14 +97,14 @@ const LoginPage = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="bg-secondary/50 text-foreground placeholder:text-muted-foreground border-border pr-10 text-sm"
+                  className="bg-secondary/50 text-foreground placeholder:text-muted-foreground border-border pr-8"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground transition"
+                  className="absolute right-2 top-2 text-muted-foreground hover:text-foreground transition"
                 >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                 </button>
               </div>
             </div>
@@ -113,13 +112,13 @@ const LoginPage = () => {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full h-11 text-sm font-semibold"
+              className="w-full text-xs font-semibold"
             >
               {loading ? 'Logging in...' : 'Login'}
             </Button>
           </form>
 
-          <p className="text-center text-muted-foreground/60 text-xs mt-6">
+          <p className="text-center text-muted-foreground/60 text-[10px] mt-4">
             If you encounter any issues, please contact{' '}
             <a
               href="https://t.me/support"

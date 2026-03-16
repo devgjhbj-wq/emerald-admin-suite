@@ -61,32 +61,32 @@ const AgentCommissions = () => {
   const totalPages = data?.total ? Math.ceil(data.total / (data.limit || 50)) : 0;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-3">
-        <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-2xl space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+    <div className="space-y-4">
+      <div className="flex flex-col gap-2">
+        <div className="bg-card border border-border p-4 space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
             <SearchBar value={recUser} onChange={setRecUser} onSearch={() => loadCommissions(1)} placeholder="Agent User ID" loading={loading} />
           </div>
-          <div className="flex flex-wrap items-end gap-3">
-            <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">Claim Status</label>
+          <div className="flex flex-wrap items-end gap-2">
+            <div className="space-y-0.5">
+              <label className="text-[10px] text-muted-foreground">Claim Status</label>
               <select
                 value={claimFilter}
                 onChange={(e) => setClaimFilter(e.target.value as '' | 'true' | 'false')}
-                className="h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground"
+                className="h-8 border border-input bg-background px-2 text-xs text-foreground"
               >
                 <option value="">All</option>
                 <option value="false">Unclaimed</option>
                 <option value="true">Claimed</option>
               </select>
             </div>
-            <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">From</label>
-              <Input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="w-40" />
+            <div className="space-y-0.5">
+              <label className="text-[10px] text-muted-foreground">From</label>
+              <Input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="w-36" />
             </div>
-            <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">To</label>
-              <Input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className="w-40" />
+            <div className="space-y-0.5">
+              <label className="text-[10px] text-muted-foreground">To</label>
+              <Input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className="w-36" />
             </div>
             <Button variant="outline" size="sm" onClick={() => loadCommissions(1)} disabled={loading}>
               Apply Filters
@@ -97,7 +97,7 @@ const AgentCommissions = () => {
           <LastUpdated timestamp={updatedAt} onRefresh={() => loadCommissions(page)} loading={loading} />
           {data?.items && (
             <Button variant="destructive" size="sm" onClick={handleClaim} disabled={claiming || !recUser.trim()}>
-              {claiming ? <Loading size={16} /> : <DollarSign className="w-4 h-4" />}
+              {claiming ? <Loading size={14} /> : <DollarSign className="w-3.5 h-3.5" />}
               Claim All Unclaimed
             </Button>
           )}
@@ -106,30 +106,30 @@ const AgentCommissions = () => {
 
       {data?.items && (
         <>
-          <div className="bg-card border border-border rounded-xl overflow-hidden">
+          <div className="bg-card border border-border overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b border-border bg-secondary/30">
-                    <th className="text-left p-3 text-muted-foreground font-medium">From User</th>
-                    <th className="text-left p-3 text-muted-foreground font-medium">Deposit Amt</th>
-                    <th className="text-left p-3 text-muted-foreground font-medium">Commission</th>
-                    <th className="text-left p-3 text-muted-foreground font-medium">Claimed</th>
-                    <th className="text-left p-3 text-muted-foreground font-medium">Date</th>
+                    <th className="text-left p-2 text-muted-foreground font-medium">From User</th>
+                    <th className="text-left p-2 text-muted-foreground font-medium">Deposit Amt</th>
+                    <th className="text-left p-2 text-muted-foreground font-medium">Commission</th>
+                    <th className="text-left p-2 text-muted-foreground font-medium">Claimed</th>
+                    <th className="text-left p-2 text-muted-foreground font-medium">Date</th>
                   </tr>
                 </thead>
                 <tbody>
                   {data.items.map((c: any, i: number) => (
                     <tr key={i} className="border-b border-border last:border-0 hover:bg-secondary/20 transition-colors">
-                      <td className="p-3 text-foreground font-mono text-xs">{c.fromUser}</td>
-                      <td className="p-3 text-foreground">₹{c.depositAmt?.toLocaleString()}</td>
-                      <td className="p-3 text-primary font-medium">₹{c.amount?.toLocaleString()}</td>
-                      <td className="p-3">
-                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${c.claim ? 'bg-primary/20 text-primary' : 'bg-yellow-500/20 text-yellow-400'}`}>
+                      <td className="p-2 text-foreground font-mono text-[10px]">{c.fromUser}</td>
+                      <td className="p-2 text-foreground">₹{c.depositAmt?.toLocaleString()}</td>
+                      <td className="p-2 text-primary font-medium">₹{c.amount?.toLocaleString()}</td>
+                      <td className="p-2">
+                        <span className={`px-1.5 py-0.5 text-[10px] font-medium ${c.claim ? 'bg-primary/20 text-primary' : 'bg-yellow-500/20 text-yellow-400'}`}>
                           {c.claim ? 'Yes' : 'No'}
                         </span>
                       </td>
-                      <td className="p-3 text-muted-foreground">{new Date(c.timestamp).toLocaleString()}</td>
+                      <td className="p-2 text-muted-foreground">{new Date(c.timestamp).toLocaleString()}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -139,13 +139,13 @@ const AgentCommissions = () => {
 
           {totalPages > 1 && (
             <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Total: {data.total} — Page {page}/{totalPages}</span>
-              <div className="flex gap-2">
+              <span className="text-xs text-muted-foreground">Total: {data.total} — Page {page}/{totalPages}</span>
+              <div className="flex gap-1">
                 <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => loadCommissions(page - 1)}>
-                  <ChevronLeft className="w-4 h-4" />
+                  <ChevronLeft className="w-3.5 h-3.5" />
                 </Button>
                 <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => loadCommissions(page + 1)}>
-                  <ChevronRight className="w-4 h-4" />
+                  <ChevronRight className="w-3.5 h-3.5" />
                 </Button>
               </div>
             </div>

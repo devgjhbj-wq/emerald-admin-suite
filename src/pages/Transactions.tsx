@@ -34,42 +34,42 @@ const Transactions = () => {
   const totalPages = data ? Math.ceil(data.total / data.limit) : 0;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-2xl">
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 bg-card border border-border p-4">
         <SearchBar value={userId} onChange={setUserId} onSearch={() => load(1)} placeholder="Enter User ID" loading={loading} />
         <LastUpdated timestamp={updatedAt} onRefresh={() => load(page)} loading={loading} />
       </div>
 
       {data?.items && (
         <>
-          <div className="bg-card border border-border rounded-xl overflow-hidden">
+          <div className="bg-card border border-border overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b border-border bg-secondary/30">
-                    <th className="text-left p-3 text-muted-foreground font-medium">Type</th>
-                    <th className="text-left p-3 text-muted-foreground font-medium">Amount</th>
-                    <th className="text-left p-3 text-muted-foreground font-medium">Balance After</th>
-                    <th className="text-left p-3 text-muted-foreground font-medium">Status</th>
-                    <th className="text-left p-3 text-muted-foreground font-medium">Remark</th>
-                    <th className="text-left p-3 text-muted-foreground font-medium">Date</th>
-                    {data.items.some((t: any) => t.updatedAt) && <th className="text-left p-3 text-muted-foreground font-medium">Updated At</th>}
+                    <th className="text-left p-2 text-muted-foreground font-medium">Type</th>
+                    <th className="text-left p-2 text-muted-foreground font-medium">Amount</th>
+                    <th className="text-left p-2 text-muted-foreground font-medium">Balance After</th>
+                    <th className="text-left p-2 text-muted-foreground font-medium">Status</th>
+                    <th className="text-left p-2 text-muted-foreground font-medium">Remark</th>
+                    <th className="text-left p-2 text-muted-foreground font-medium">Date</th>
+                    {data.items.some((t: any) => t.updatedAt) && <th className="text-left p-2 text-muted-foreground font-medium">Updated At</th>}
                   </tr>
                 </thead>
                 <tbody>
                   {data.items.map((t: any, i: number) => (
                     <tr key={i} className="border-b border-border last:border-0 hover:bg-secondary/20 transition-colors">
-                      <td className="p-3 text-foreground font-medium">{t.type}</td>
-                      <td className="p-3 text-foreground">₹{t.amount?.toLocaleString()}</td>
-                      <td className="p-3 text-foreground">₹{t.balanceAfter?.toLocaleString()}</td>
-                      <td className="p-3">
-                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${t.status === 'SUCCESS' ? 'bg-primary/20 text-primary' : 'bg-destructive/20 text-destructive'}`}>
+                      <td className="p-2 text-foreground font-medium">{t.type}</td>
+                      <td className="p-2 text-foreground">₹{t.amount?.toLocaleString()}</td>
+                      <td className="p-2 text-foreground">₹{t.balanceAfter?.toLocaleString()}</td>
+                      <td className="p-2">
+                        <span className={`px-1.5 py-0.5 text-[10px] font-medium ${t.status === 'SUCCESS' ? 'bg-primary/20 text-primary' : 'bg-destructive/20 text-destructive'}`}>
                           {t.status}
                         </span>
                       </td>
-                      <td className="p-3 text-muted-foreground">{t.remark || '—'}</td>
-                      <td className="p-3 text-muted-foreground">{new Date(t.createdAt).toLocaleString()}</td>
-                      {data.items.some((t: any) => t.updatedAt) && <td className="p-3 text-muted-foreground">{t.updatedAt ? new Date(t.updatedAt).toLocaleString() : '—'}</td>}
+                      <td className="p-2 text-muted-foreground">{t.remark || '—'}</td>
+                      <td className="p-2 text-muted-foreground">{new Date(t.createdAt).toLocaleString()}</td>
+                      {data.items.some((t: any) => t.updatedAt) && <td className="p-2 text-muted-foreground">{t.updatedAt ? new Date(t.updatedAt).toLocaleString() : '—'}</td>}
                     </tr>
                   ))}
                 </tbody>
@@ -78,13 +78,13 @@ const Transactions = () => {
           </div>
 
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Total: {data.total} — Page {page}/{totalPages}</span>
-            <div className="flex gap-2">
+            <span className="text-xs text-muted-foreground">Total: {data.total} — Page {page}/{totalPages}</span>
+            <div className="flex gap-1">
               <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => load(page - 1)}>
-                <ChevronLeft className="w-4 h-4" />
+                <ChevronLeft className="w-3.5 h-3.5" />
               </Button>
               <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => load(page + 1)}>
-                <ChevronRight className="w-4 h-4" />
+                <ChevronRight className="w-3.5 h-3.5" />
               </Button>
             </div>
           </div>

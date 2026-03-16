@@ -16,16 +16,16 @@ const SearchBar = ({ value, onChange, onSearch, placeholder = 'Search...', loadi
   };
 
   return (
-    <div className="flex gap-2">
+    <div className="flex gap-1.5">
       <Input
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
-        className="bg-secondary/50 text-foreground placeholder:text-muted-foreground border-border text-sm max-w-sm"
+        className="bg-secondary/50 text-foreground placeholder:text-muted-foreground border-border max-w-xs"
       />
-      <Button onClick={onSearch} disabled={loading || !value.trim()} size="default">
-        <Search className="w-4 h-4 mr-2" />
+      <Button onClick={onSearch} disabled={loading || !value.trim()} size="sm">
+        <Search className="w-3.5 h-3.5 mr-1" />
         {loading ? 'Searching...' : 'Search'}
       </Button>
     </div>

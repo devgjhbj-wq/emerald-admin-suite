@@ -26,9 +26,7 @@ const AgentConfig = () => {
     }
   };
 
-  useEffect(() => {
-    loadConfig();
-  }, []);
+  useEffect(() => { loadConfig(); }, []);
 
   const handleSave = async () => {
     if (rates.some((r) => r < 0 || r > 1)) {
@@ -56,27 +54,27 @@ const AgentConfig = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-2xl flex items-center justify-between">
+    <div className="space-y-4">
+      <div className="bg-card border border-border p-4 flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-foreground">Commission Rates</h2>
-          <p className="text-sm text-muted-foreground mt-1">Configure agent referral commission rates per level</p>
+          <h2 className="text-sm font-semibold text-foreground">Commission Rates</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">Configure agent referral commission rates per level</p>
         </div>
         <Button variant="outline" size="sm" onClick={loadConfig} disabled={loading}>
-          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
         </Button>
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-12">
+        <div className="flex justify-center py-8">
           <Loading />
         </div>
       ) : (
-        <div className="bg-card border border-border rounded-xl p-6 space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <div className="bg-card border border-border p-4 space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {['Level 1 (Direct)', 'Level 2', 'Level 3'].map((label, i) => (
-              <div key={i} className="space-y-2">
-                <label className="text-sm font-medium text-muted-foreground">{label}</label>
+              <div key={i} className="space-y-1">
+                <label className="text-xs font-medium text-muted-foreground">{label}</label>
                 <Input
                   type="number"
                   step="0.001"
@@ -86,14 +84,14 @@ const AgentConfig = () => {
                   onChange={(e) => updateRate(i, e.target.value)}
                   className="font-mono"
                 />
-                <p className="text-xs text-muted-foreground">{(rates[i] * 100).toFixed(1)}%</p>
+                <p className="text-[10px] text-muted-foreground">{(rates[i] * 100).toFixed(1)}%</p>
               </div>
             ))}
           </div>
 
-          <div className="flex justify-end pt-4 border-t border-border">
-            <Button onClick={handleSave} disabled={saving}>
-              {saving ? <Loading size={16} /> : <Save className="w-4 h-4" />}
+          <div className="flex justify-end pt-3 border-t border-border">
+            <Button size="sm" onClick={handleSave} disabled={saving}>
+              {saving ? <Loading size={14} /> : <Save className="w-3.5 h-3.5" />}
               Save Changes
             </Button>
           </div>

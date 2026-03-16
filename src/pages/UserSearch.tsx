@@ -7,8 +7,8 @@ import LastUpdated from '@/components/LastUpdated';
 import Loading from '@/components/Loading';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
-import { ShieldAlert, ShieldCheck, Smartphone, Globe, Fingerprint, Banknote } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { ShieldAlert, Smartphone, Globe, Fingerprint, Banknote } from 'lucide-react';
 
 const UserSearch = () => {
   const { token } = useAuth();
@@ -83,20 +83,19 @@ const UserSearch = () => {
   };
 
   const { user, account, deviceRisk } = result || {};
-  const currentUserId = user?.userId;
 
   return (
-    <div className="space-y-6">
-       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-2xl">
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 bg-card border border-border p-4">
         <SearchBar value={userId} onChange={setUserId} onSearch={handleSearch} placeholder="Enter User ID" loading={loading} />
         <LastUpdated timestamp={updatedAt} onRefresh={handleSearch} loading={loading} />
       </div>
 
       {result && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {user && (
-            <div className="bg-card border border-border rounded-xl p-6 space-y-3">
-              <h3 className="text-lg font-semibold text-foreground">User Profile</h3>
+            <div className="bg-card border border-border p-4 space-y-2">
+              <h3 className="text-sm font-semibold text-foreground">User Profile</h3>
               <InfoRow label="User ID" value={user.userId} />
               <InfoRow label="Mobile" value={user.mobile} />
               <InfoRow label="Admin" value={user.admin ? 'Yes' : 'No'} />
@@ -105,9 +104,9 @@ const UserSearch = () => {
             </div>
           )}
           {account && (
-            <div className="bg-card border border-border rounded-xl p-6 space-y-3">
+            <div className="bg-card border border-border p-4 space-y-2">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-foreground">Account</h3>
+                <h3 className="text-sm font-semibold text-foreground">Account</h3>
                 <Button variant="outline" size="sm" onClick={() => setStatusDialogOpen(true)}>
                   Change Status
                 </Button>
@@ -117,7 +116,7 @@ const UserSearch = () => {
               <InfoRow 
                 label="Status" 
                 value={
-                  <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                  <span className={`px-1.5 py-0.5 text-[10px] font-medium ${
                     account.status === 'active' ? 'bg-green-500/20 text-green-400' :
                     account.status === 'suspended' ? 'bg-yellow-500/20 text-yellow-400' :
                     'bg-red-500/20 text-red-400'
@@ -126,9 +125,7 @@ const UserSearch = () => {
                   </span>
                 } 
               />
-              {account.statusRemark && (
-                <InfoRow label="Remark" value={account.statusRemark} />
-              )}
+              {account.statusRemark && <InfoRow label="Remark" value={account.statusRemark} />}
               <InfoRow label="VIP Level" value={account.vipLevel || '—'} />
               <InfoRow label="Withdraw Daily Limit" value={`₹${account.withdrawDailyLimit?.toLocaleString()}`} />
               <InfoRow label="Created" value={new Date(account.createdAt).toLocaleString()} />
@@ -138,10 +135,10 @@ const UserSearch = () => {
       )}
 
       {account?.bindAccount && (
-        <div className="bg-card border border-border rounded-xl p-6 space-y-4">
+        <div className="bg-card border border-border p-4 space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
-              <Banknote className="w-5 h-5" />
+            <h3 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
+              <Banknote className="w-4 h-4" />
               Bound Bank Account
             </h3>
             <Button variant="outline" size="sm" onClick={() => {
@@ -155,7 +152,7 @@ const UserSearch = () => {
               Override Bank
             </Button>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
             <InfoRow label="Bank Name" value={account.bindAccount.bankName} />
             <InfoRow label="IFSC Code" value={account.bindAccount.bankCode} />
             <InfoRow label="Account Number" value={account.bindAccount.accountNumber} />
@@ -166,40 +163,40 @@ const UserSearch = () => {
       )}
 
       {deviceRisk && (
-        <div className="bg-card border border-border rounded-xl p-6 space-y-4">
+        <div className="bg-card border border-border p-4 space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
-              <ShieldAlert className="w-5 h-5" />
+            <h3 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
+              <ShieldAlert className="w-4 h-4" />
               Device Risk Assessment
             </h3>
             <div className="flex items-center gap-2">
-              <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+              <span className={`px-2 py-0.5 text-xs font-medium ${
                 deviceRisk.flagged 
                   ? 'bg-red-500/20 text-red-400' 
                   : 'bg-green-500/20 text-green-400'
               }`}>
                 {deviceRisk.flagged ? 'Flagged' : 'Safe'}
               </span>
-              <span className="text-sm text-muted-foreground">
+              <span className="text-[10px] text-muted-foreground">
                 Risk: {deviceRisk.latestRisk}/100 (Max: {deviceRisk.maxRisk})
               </span>
             </div>
           </div>
 
           {deviceRisk.signals && deviceRisk.signals.length > 0 && (
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1">
               {deviceRisk.signals.map((signal: string, i: number) => (
-                <span key={i} className="px-2 py-1 bg-yellow-500/20 text-yellow-400 rounded text-xs">
+                <span key={i} className="px-1.5 py-0.5 bg-yellow-500/20 text-yellow-400 text-[10px]">
                   {signal}
                 </span>
               ))}
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div className="bg-secondary/30 rounded-lg p-4 space-y-2">
-              <h4 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <Smartphone className="w-4 h-4" /> Device Info
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="bg-secondary/30 p-3 space-y-1.5">
+              <h4 className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                <Smartphone className="w-3.5 h-3.5" /> Device Info
               </h4>
               <InfoRow label="Device ID" value={deviceRisk.latest?.deviceId || '—'} />
               <InfoRow label="Ad ID" value={deviceRisk.latest?.adId || '—'} />
@@ -211,9 +208,9 @@ const UserSearch = () => {
               <InfoRow label="Memory" value={deviceRisk.latest?.deviceMemory ? `${deviceRisk.latest.deviceMemory}GB` : '—'} />
             </div>
 
-            <div className="bg-secondary/30 rounded-lg p-4 space-y-2">
-              <h4 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <Globe className="w-4 h-4" /> Network Info
+            <div className="bg-secondary/30 p-3 space-y-1.5">
+              <h4 className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                <Globe className="w-3.5 h-3.5" /> Network Info
               </h4>
               <InfoRow label="IP" value={deviceRisk.latest?.ip || '—'} />
               <InfoRow label="Country" value={deviceRisk.latest?.ipCountry || '—'} />
@@ -224,9 +221,9 @@ const UserSearch = () => {
               <InfoRow label="VPN" value={deviceRisk.latest?.vpnDetected ? 'Yes' : 'No'} />
             </div>
 
-            <div className="bg-secondary/30 rounded-lg p-4 space-y-2">
-              <h4 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <Fingerprint className="w-4 h-4" /> Payment & Stats
+            <div className="bg-secondary/30 p-3 space-y-1.5">
+              <h4 className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                <Fingerprint className="w-3.5 h-3.5" /> Payment & Stats
               </h4>
               <InfoRow label="Payment Hash" value={deviceRisk.latest?.paymentMethodHash || '—'} />
               <InfoRow label="Last Seen" value={deviceRisk.latest?.at ? new Date(deviceRisk.latest.at).toLocaleString() : '—'} />
@@ -239,23 +236,23 @@ const UserSearch = () => {
       <Dialog open={statusDialogOpen} onOpenChange={setStatusDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Change User Status</DialogTitle>
+            <DialogTitle className="text-sm">Change User Status</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Status</label>
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <label className="text-xs font-medium">Status</label>
               <select
                 value={newStatus}
                 onChange={(e) => setNewStatus(e.target.value as any)}
-                className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+                className="w-full h-8 border border-input bg-background px-2 text-xs"
               >
                 <option value="active">Active</option>
                 <option value="suspended">Suspended</option>
                 <option value="inactive">Inactive (Ban)</option>
               </select>
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Remark (optional)</label>
+            <div className="space-y-1">
+              <label className="text-xs font-medium">Remark (optional)</label>
               <Input
                 value={statusRemark}
                 onChange={(e) => setStatusRemark(e.target.value)}
@@ -264,9 +261,9 @@ const UserSearch = () => {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setStatusDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleStatusChange} disabled={statusLoading}>
-              {statusLoading && <Loading size={16} />}
+            <Button variant="outline" size="sm" onClick={() => setStatusDialogOpen(false)}>Cancel</Button>
+            <Button size="sm" onClick={handleStatusChange} disabled={statusLoading}>
+              {statusLoading && <Loading size={14} />}
               Save
             </Button>
           </DialogFooter>
@@ -276,30 +273,30 @@ const UserSearch = () => {
       <Dialog open={bankDialogOpen} onOpenChange={setBankDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Override Bank Account</DialogTitle>
+            <DialogTitle className="text-sm">Override Bank Account</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Bank Name</label>
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <label className="text-xs font-medium">Bank Name</label>
               <Input value={bankName} onChange={(e) => setBankName(e.target.value)} placeholder="e.g., HDFC" />
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">IFSC Code</label>
+            <div className="space-y-1">
+              <label className="text-xs font-medium">IFSC Code</label>
               <Input value={bankCode} onChange={(e) => setBankCode(e.target.value)} placeholder="e.g., HDFC0001234" />
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Account Number</label>
+            <div className="space-y-1">
+              <label className="text-xs font-medium">Account Number</label>
               <Input value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} placeholder="e.g., XXXXXX4321" />
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Account Holder</label>
+            <div className="space-y-1">
+              <label className="text-xs font-medium">Account Holder</label>
               <Input value={accountHolder} onChange={(e) => setAccountHolder(e.target.value)} placeholder="e.g., Rahul" />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setBankDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleBankOverride} disabled={bankLoading || !bankName || !bankCode || !accountNumber || !accountHolder}>
-              {bankLoading && <Loading size={16} />}
+            <Button variant="outline" size="sm" onClick={() => setBankDialogOpen(false)}>Cancel</Button>
+            <Button size="sm" onClick={handleBankOverride} disabled={bankLoading || !bankName || !bankCode || !accountNumber || !accountHolder}>
+              {bankLoading && <Loading size={14} />}
               Save
             </Button>
           </DialogFooter>
@@ -310,9 +307,9 @@ const UserSearch = () => {
 };
 
 const InfoRow = ({ label, value }: { label: string; value: any }) => (
-  <div className="flex justify-between items-center py-1 border-b border-border last:border-0">
-    <span className="text-sm text-muted-foreground">{label}</span>
-    <span className="text-sm font-medium text-foreground">{String(value ?? '—')}</span>
+  <div className="flex justify-between items-center py-0.5 border-b border-border last:border-0">
+    <span className="text-xs text-muted-foreground">{label}</span>
+    <span className="text-xs font-medium text-foreground">{String(value ?? '—')}</span>
   </div>
 );
 
