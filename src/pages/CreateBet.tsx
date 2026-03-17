@@ -49,7 +49,7 @@ const CreateBet = () => {
     };
 
     try {
-      const res = await api.post("/admin//bet-record", payload);
+      const res = await api.post("/api/admin//bet-record", payload);
       if (res.status === 200) {
         toast({
           title: "Success",
