@@ -11,19 +11,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { api } from "@/lib/api";
+import { createBetRecord } from "@/lib/api";
 
 const CreateBet = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [form, setForm] = useState({
     userId: "",
-    member: "",
-    site: "",
+    site: "JE",
     product: "SL",
-    gameId: "",
-    bet: "",
-    payout: "",
+    gameId: "0",
+    amount: "",
     status: "1",
   });
 
@@ -40,16 +38,23 @@ const CreateBet = () => {
     e.preventDefault();
     setIsLoading(true);
 
+    if (!form.userId || !form.amount) {
+      toast({ title: "Error", description: "User ID and Amount are required.", variant: "destructive" });
+      setIsLoading(false);
+      return;
+    }
+
     const payload = {
-      ...form,
-      userId: form.userId ? Number(form.userId) : undefined,
-      bet: Number(form.bet),
-      payout: form.payout ? Number(form.payout) : 0,
+      userId: Number(form.userId),
+      amount: Number(form.amount),
+      site: form.site || "JE",
+      product: form.product || "SL",
+      gameId: form.gameId || "0",
       status: Number(form.status),
     };
 
     try {
-      const res = await api.post("/api/admin//bet-record", payload);
+      const res = await createBetRecord(payload);
       if (res.status === 200) {
         toast({
           title: "Success",
@@ -57,12 +62,10 @@ const CreateBet = () => {
         });
         setForm({
           userId: "",
-          member: "",
-          site: "",
+          site: "JE",
           product: "SL",
-          gameId: "",
-          bet: "",
-          payout: "",
+          gameId: "0",
+          amount: "",
           status: "1",
         });
       }
@@ -84,7 +87,7 @@ const CreateBet = () => {
       <form onSubmit={handleSubmit} className="space-y-4 max-w-lg">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <Label htmlFor="userId">User ID</Label>
+            <Label htmlFor="userId">User ID (Required)</Label>
             <Input
               id="userId"
               name="userId"
@@ -92,16 +95,6 @@ const CreateBet = () => {
               value={form.userId}
               onChange={handleInputChange}
               placeholder="e.g., 32545513"
-            />
-          </div>
-          <div>
-            <Label htmlFor="member">Member Username</Label>
-            <Input
-              id="member"
-              name="member"
-              value={form.member}
-              onChange={handleInputChange}
-              placeholder="e.g., u123456"
               required
             />
           </div>
@@ -148,24 +141,15 @@ const CreateBet = () => {
             />
           </div>
           <div>
-            <Label htmlFor="bet">Bet Amount</Label>
+            <Label htmlFor="amount">Amount (Positive for win, Negative for loss)</Label>
             <Input
-              id="bet"
-              name="bet"
+              id="amount"
+              name="amount"
               type="number"
-              value={form.bet}
+              value={form.amount}
               onChange={handleInputChange}
+              placeholder="e.g., 100 or -100"
               required
-            />
-          </div>
-          <div>
-            <Label htmlFor="payout">Payout Amount</Label>
-            <Input
-              id="payout"
-              name="payout"
-              type="number"
-              value={form.payout}
-              onChange={handleInputChange}
             />
           </div>
           <div>
