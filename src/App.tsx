@@ -17,6 +17,8 @@ import AgentDaily from "./pages/AgentDaily";
 import AdminLogs from "./pages/AdminLogs";
 import VipConfig from "./pages/VipConfig";
 import CreateBet from "./pages/CreateBet";
+import TurnoverConfig from "./pages/TurnoverConfig";
+import GameBets from "./pages/GameBets";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -41,7 +43,9 @@ const App = () => (
               <Route path="agent-config" element={<AgentConfig />} />
               <Route path="logs" element={<AdminLogs />} />
               <Route path="vip-config" element={<VipConfig />} />
+              <Route path="turnover-config" element={<TurnoverConfig />} />
               <Route path="create-bet" element={<CreateBet />} />
+              <Route path="game-bets" element={<GameBets />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -14,6 +14,8 @@ import {
   FileText,
   Crown,
   Pencil,
+  Gamepad2,
+  RefreshCcw,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
@@ -29,8 +31,10 @@ const navItems = [
   { title: "Commissions", url: "/dashboard/commissions", icon: Coins },
   { title: "Agent Config", url: "/dashboard/agent-config", icon: Settings },
   { title: "VIP Config", url: "/dashboard/vip-config", icon: Crown },
+  { title: "Turnover Config", url: "/dashboard/turnover-config", icon: RefreshCcw },
   { title: "Admin Logs", url: "/dashboard/logs", icon: FileText },
   { title: "Create Bet", url: "/dashboard/create-bet", icon: Pencil },
+  { title: "Game Bets", url: "/dashboard/game-bets", icon: Gamepad2 },
 ];
 
 const AdminLayout = () => {

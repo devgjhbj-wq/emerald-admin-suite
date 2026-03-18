@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import SearchBar from '@/components/SearchBar';
 import LastUpdated from '@/components/LastUpdated';
 import Loading from '@/components/Loading';
+import UserTurnover from '@/components/UserTurnover';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -132,6 +133,10 @@ const UserSearch = () => {
             </div>
           )}
         </div>
+      )}
+
+      {user?.userId && (
+        <UserTurnover userId={user.userId} />
       )}
 
       {account?.bindAccount && (

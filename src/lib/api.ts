@@ -101,3 +101,35 @@ export const fetchAdminLogs = (params?: { level?: 'info' | 'error'; since?: stri
 // VIP Config
 export const fetchVipConfig = () => api.get('/api/admin/vip-config');
 export const updateVipConfig = (levels: any[]) => api.put('/api/admin/vip-config', { levels });
+
+// Game - Bet Records
+export const createBetRecord = (data: { userId: number; amount: number; product?: string; gameId?: string; site?: string; status?: number }) =>
+  api.post('/api/admin/bet-record', data);
+
+export const searchBetsByMember = (member: string, params?: { page?: number; limit?: number; site?: string; status?: number; dateFrom?: string; dateTo?: string }) => {
+  const query = new URLSearchParams({ member });
+  if (params?.page) query.set('page', String(params.page));
+  if (params?.limit) query.set('limit', String(params.limit));
+  if (params?.site) query.set('site', params.site);
+  if (params?.status !== undefined) query.set('status', String(params.status));
+  if (params?.dateFrom) query.set('dateFrom', params.dateFrom);
+  if (params?.dateTo) query.set('dateTo', params.dateTo);
+  return api.get(`/api/game/all-bets?${query.toString()}`);
+};
+
+export const syncBetRecords = () => api.post('/api/game/sync-bets');
+
+// Turnover Management
+export const fetchTurnoverConfig = () => api.get('/api/admin/turnover-config');
+
+export const updateTurnoverConfig = (data: { type: string; multiplier: number; active: boolean; description?: string }) =>
+  api.put('/api/admin/turnover-config', data);
+
+export const fetchTurnoverStatus = (userId: string | number) =>
+  api.get(`/api/admin/turnover-status?userId=${userId}`);
+
+export const clearTurnover = (userId: number | string, reason?: string) =>
+  api.post('/api/admin/turnover/clear', { userId, reason });
+
+export const addTurnover = (data: { userId: number | string; amount: number; type: string; sourceRef?: string }) =>
+  api.post('/api/admin/turnover/add', data);
