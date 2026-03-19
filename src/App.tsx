@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import UserSearch from "./pages/UserSearch";
 import Transactions from "./pages/Transactions";
 import Deposits from "./pages/Deposits";
+import Withdrawals from "./pages/Withdrawals";
 import AgentStats from "./pages/AgentStats";
 import AgentConfig from "./pages/AgentConfig";
 import AgentCommissions from "./pages/AgentCommissions";
@@ -37,6 +38,7 @@ const App = () => (
               <Route path="users" element={<UserSearch />} />
               <Route path="transactions" element={<Transactions />} />
               <Route path="deposits" element={<Deposits />} />
+              <Route path="withdrawals" element={<Withdrawals />} />
               <Route path="agent-stats" element={<AgentStats />} />
               <Route path="agent-daily" element={<AgentDaily />} />
               <Route path="commissions" element={<AgentCommissions />} />

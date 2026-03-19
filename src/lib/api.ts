@@ -56,6 +56,13 @@ export const fetchDepositByOrder = (orderId: string) =>
 export const approveDeposit = (orderId: string) =>
   api.post('/api/admin/deposits/approve', { orderId });
 
+// Withdrawals
+export const fetchWithdrawalsByUser = (userId: string, page = 1, limit = 25) =>
+  api.get(`/api/admin/withdrawals?userId=${userId}&page=${page}&limit=${limit}`);
+
+export const fetchWithdrawalByOrder = (orderId: string) =>
+  api.get(`/api/admin/withdrawals/${orderId}`);
+
 // Agent Stats
 export const fetchAgentStats = (userId: string, page = 1, limit = 50) =>
   api.get(`/api/admin/agent-stats?userId=${userId}&page=${page}&limit=${limit}`);

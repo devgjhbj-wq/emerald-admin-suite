@@ -172,7 +172,103 @@ GET /admin/transactions?userId=123456&page=1&limit=25
 
 ---
 
-## 5. Game - Bet Records
+## 5. Withdrawals
+
+### Get Withdrawal Orders by User ID
+
+```
+GET /admin/withdrawals?userId=123456&page=1&limit=25&status=PENDING
+```
+
+**Description:** Retrieve all withdrawal orders for a specific user with pagination and optional status filtering.
+
+**Query Params:**
+| Param | Type | Description |
+|-------|------|-------------|
+| userId | number | User ID (required) |
+| page | number | Page number (default: 1) |
+| limit | number | Items per page (default: 25, max: 100) |
+| status | string | Filter by status: PENDING, APPROVED, REJECTED, COMPLETED |
+
+**Response:**
+
+```json
+{
+  "status": "success",
+  "userId": 123456,
+  "page": 1,
+  "limit": 25,
+  "total": 5,
+  "items": [
+    {
+      "userId": 123456,
+      "type": "WITHDRAW",
+      "amount": 500.0,
+      "balanceAfter": 1500.0,
+      "status": "PENDING",
+      "orderId": "WD12345617234567890",
+      "remark": "Withdrawal request",
+      "createdAt": "2026-03-19T10:30:00.000Z"
+    }
+  ]
+}
+```
+
+### Get Withdrawal Order by Order ID
+
+```
+GET /admin/withdrawals/:orderId
+```
+
+**Description:** Retrieve a specific withdrawal order by its order ID.
+
+**Path Parameters:**
+| Param | Type | Description |
+|-------|------|-------------|
+| orderId | string | Withdrawal order ID (e.g., WD12345617234567890) |
+
+**Response:**
+
+```json
+{
+  "status": "success",
+  "withdrawal": {
+    "_id": "507f1f77bcf86cd799439011",
+    "userId": 123456,
+    "type": "WITHDRAW",
+    "amount": 500.0,
+    "balanceAfter": 1500.0,
+    "status": "PENDING",
+    "orderId": "WD12345617234567890",
+    "remark": "Withdrawal request",
+    "createdAt": "2026-03-19T10:30:00.000Z"
+  }
+}
+```
+
+
+
+### Get Withdrawals (All Statuses)
+
+```
+GET /admin/withdrawals?page=1&limit=25
+```
+
+**Description:** Get paginated list of all withdrawal orders across all users.
+
+**Query Params:**
+| Param | Type | Description |
+|-------|------|-------------|
+| page | number | Page number (default: 1) |
+| limit | number | Items per page (default: 25, max: 100) |
+| status | string | Filter by status: PENDING, APPROVED, REJECTED, COMPLETED |
+| userId | number | Filter by user ID (optional) |
+| dateFrom | string | Start date (YYYY-MM-DD) |
+| dateTo | string | End date (YYYY-MM-DD) |
+
+---
+
+## 6. Game - Bet Records
 
 ### Create Bet Record (Admin - Simple)
 
@@ -184,14 +280,14 @@ POST /admin/bet-record
 
 **Body:**
 
-| Param | Type | Required | Description |
-|-------|------|----------|-------------|
-| userId | number | Yes | User ID |
-| amount | number | Yes | Bet amount (positive for win, negative for loss) |
-| product | string | No | Game type (default: SL) |
-| gameId | string | No | Game ID (default: "0") |
-| site | string | No | Provider code (default: JE) |
-| status | number | No | Status (1=valid, default) |
+| Param   | Type   | Required | Description                                      |
+| ------- | ------ | -------- | ------------------------------------------------ |
+| userId  | number | Yes      | User ID                                          |
+| amount  | number | Yes      | Bet amount (positive for win, negative for loss) |
+| product | string | No       | Game type (default: SL)                          |
+| gameId  | string | No       | Game ID (default: "0")                           |
+| site    | string | No       | Provider code (default: JE)                      |
+| status  | number | No       | Status (1=valid, default)                        |
 
 **Note:** `bet`, `payout`, and `turnover` are all automatically set to the same value based on `amount`.
 
@@ -232,7 +328,8 @@ POST /admin/bet-record
 }
 ```
 
-**Note:** 
+**Note:**
+
 - Positive amount = win (payout = amount)
 - Negative amount = loss (payout = 0)
 - Creating bet records will reduce user's turnover requirement
@@ -247,21 +344,21 @@ POST /api/game/create-bet
 
 **Body:**
 
-| Param | Type | Required | Description |
-|-------|------|----------|-------------|
-| member | string | Yes | Member username (e.g., u32545526) |
-| site | string | Yes | Provider code (e.g., JE) |
-| product | string | No | Game type (default: "") |
-| gameId | string | No | Game ID (default: "") |
-| refNo | string | No | Reference number (auto-generated if empty) |
-| betTime | string | No | Bet time ISO string |
-| settleTime | string | No | Settlement time ISO string |
-| bet | number | Yes | Bet amount |
-| payout | number | No | Payout amount (default: 0) |
-| status | number | No | Status (default: 0) |
-| userId | number | No | User ID for turnover processing |
+| Param      | Type   | Required | Description                                |
+| ---------- | ------ | -------- | ------------------------------------------ |
+| member     | string | Yes      | Member username (e.g., u32545526)          |
+| site       | string | Yes      | Provider code (e.g., JE)                   |
+| product    | string | No       | Game type (default: "")                    |
+| gameId     | string | No       | Game ID (default: "")                      |
+| refNo      | string | No       | Reference number (auto-generated if empty) |
+| betTime    | string | No       | Bet time ISO string                        |
+| settleTime | string | No       | Settlement time ISO string                 |
+| bet        | number | Yes      | Bet amount                                 |
+| payout     | number | No       | Payout amount (default: 0)                 |
+| status     | number | No       | Status (default: 0)                        |
+| userId     | number | No       | User ID for turnover processing            |
 
-**Note:** `turnover` is automatically set equal to `bet`. All fields match the exact structure of game provider bet records.
+**Note:** `turnover` is automatically set equal to `bet`. All fields match the exact structure of game provider bet records. When `userId` is provided, this bet will trigger turnover reduction for that user.
 
 **Example:**
 
@@ -374,7 +471,7 @@ POST /game/sync-bets
 
 ---
 
-## 6. VIP Configuration
+## 7. VIP Configuration
 
 ### Get VIP Config
 
@@ -430,7 +527,7 @@ PUT /admin/vip-config
 
 ---
 
-## 7. Agent
+## 8. Agent
 
 ### Get Agent Stats
 
@@ -479,7 +576,7 @@ PUT /admin/agent-config
 
 ---
 
-## 8. Logs
+## 9. Logs
 
 ### Get Server Logs
 
@@ -489,7 +586,7 @@ GET /admin/logs?page=1&limit=50
 
 ---
 
-## 9. Turnover Management
+## 10. Turnover Management
 
 ### Get Turnover Config
 
@@ -569,15 +666,15 @@ PUT /admin/turnover-config
 
 **Transaction Types:**
 
-| Type | Description |
-|------|-------------|
-| DEPOSIT | Deposit turnover requirement |
-| VIP_BONUS | VIP Bonus turnover requirement |
-| MONTHLY_BONUS | Monthly check-in bonus |
-| UPGRADE_BONUS | VIP upgrade bonus |
-| ADMIN_BONUS | Admin added bonus |
-| REFERRAL_BONUS | Referral bonus |
-| PROMOTION | Promotion bonus |
+| Type           | Description                    |
+| -------------- | ------------------------------ |
+| DEPOSIT        | Deposit turnover requirement   |
+| VIP_BONUS      | VIP Bonus turnover requirement |
+| MONTHLY_BONUS  | Monthly check-in bonus         |
+| UPGRADE_BONUS  | VIP upgrade bonus              |
+| ADMIN_BONUS    | Admin added bonus              |
+| REFERRAL_BONUS | Referral bonus                 |
+| PROMOTION      | Promotion bonus                |
 
 ### Get User Turnover Status
 
@@ -677,7 +774,7 @@ POST /admin/turnover/add
 
 ---
 
-## 10. Turnover System Overview
+## 11. Turnover System Overview
 
 ### How Turnover Works
 
@@ -691,31 +788,33 @@ The turnover-based withdrawable system:
 ### Batch-Based Calculation
 
 Each deposit/bonus creates a separate batch with its own timestamp:
+
 - Only bets settled AFTER the batch's `createdAt` are counted for that batch
 - Old bets before deposit are NOT counted for new turnover
 - Each batch tracks its own completion status via `lastCalcAt`
 
 ### Key Concepts
 
-| Term | Description |
-|------|-------------|
-| turnover_requirement | **Remaining amount** user must bet before withdrawal (absolute value) |
-| turnover_progress | **Percentage complete** (0-100%) - how much of turnover user has done |
-| total_turnover_completed | Total turnover ever completed (cumulative) |
-| turnover_batches | Individual deposit/bonus entries tracking progress |
-| batch.createdAt | Timestamp when batch was created (only bets AFTER this count) |
-| batch.lastCalcAt | Last time this batch was processed |
-| multiplier | Configurable per transaction type (default: 1x) |
-| canWithdraw | true only when turnover_requirement = 0 |
+| Term                     | Description                                                           |
+| ------------------------ | --------------------------------------------------------------------- |
+| turnover_requirement     | **Remaining amount** user must bet before withdrawal (absolute value) |
+| turnover_progress        | **Percentage complete** (0-100%) - how much of turnover user has done |
+| total_turnover_completed | Total turnover ever completed (cumulative)                            |
+| turnover_batches         | Individual deposit/bonus entries tracking progress                    |
+| batch.createdAt          | Timestamp when batch was created (only bets AFTER this count)         |
+| batch.lastCalcAt         | Last time this batch was processed                                    |
+| multiplier               | Configurable per transaction type (default: 1x)                       |
+| canWithdraw              | true only when turnover_requirement = 0                               |
 
 ### Scheduler Configuration
 
-| Environment Variable | Default | Description |
-|--------------------|---------|-------------|
-| BET_SYNC_INTERVAL_MINUTES | 1 | How often to sync bets from provider |
-| TURNOVER_INTERVAL_MINUTES | 1 | How often to calculate turnover |
+| Environment Variable      | Default | Description                          |
+| ------------------------- | ------- | ------------------------------------ |
+| BET_SYNC_INTERVAL_MINUTES | 1       | How often to sync bets from provider |
+| TURNOVER_INTERVAL_MINUTES | 1       | How often to calculate turnover      |
 
 Set to 10 minutes for production:
+
 ```
 BET_SYNC_INTERVAL_MINUTES=10
 TURNOVER_INTERVAL_MINUTES=10
@@ -723,12 +822,12 @@ TURNOVER_INTERVAL_MINUTES=10
 
 ### Example Scenario
 
-| Action | Time | Batch | Bet Considered? |
-|--------|------|-------|----------------|
-| User bets 200 | 10:00 | Old batch | NO |
-| User deposits 1000 | 10:30 | New batch (1000 required) | - |
-| User bets 500 | 10:35 | New batch | YES (counts) |
-| User bets 500 | 10:40 | New batch | YES (counts, done!) |
+| Action             | Time  | Batch                     | Bet Considered?     |
+| ------------------ | ----- | ------------------------- | ------------------- |
+| User bets 200      | 10:00 | Old batch                 | NO                  |
+| User deposits 1000 | 10:30 | New batch (1000 required) | -                   |
+| User bets 500      | 10:35 | New batch                 | YES (counts)        |
+| User bets 500      | 10:40 | New batch                 | YES (counts, done!) |
 
 ### Account Fields
 
