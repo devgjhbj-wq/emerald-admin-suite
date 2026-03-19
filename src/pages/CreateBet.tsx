@@ -49,7 +49,7 @@ const CreateBet = () => {
       return;
     }
 
-    const payload: any = {
+    const payload: Record<string, string | number> = {
       member: form.member,
       site: form.site,
       bet: Number(form.bet),
@@ -74,7 +74,7 @@ const CreateBet = () => {
     if (form.userId) payload.userId = Number(form.userId);
 
     try {
-      const res = await createDetailedBetRecord(payload);
+      const res = await createDetailedBetRecord(payload as any);
       if (res.status === 200) {
         toast({
           title: "Success",
