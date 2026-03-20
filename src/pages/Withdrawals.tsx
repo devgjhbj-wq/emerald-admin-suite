@@ -5,8 +5,12 @@ import { toast } from 'sonner';
 import SearchBar from '@/components/SearchBar';
 import LastUpdated from '@/components/LastUpdated';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { format } from 'date-fns';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
 
 const statusColor: Record<string, string> = {
   SUCCESS: 'bg-primary/20 text-primary',
@@ -26,8 +30,8 @@ const Withdrawals = () => {
   const [latestLoading, setLatestLoading] = useState(false);
   const [latestPage, setLatestPage] = useState(1);
   const [latestStatus, setLatestStatus] = useState('');
-  const [latestDateFrom, setLatestDateFrom] = useState('');
-  const [latestDateTo, setLatestDateTo] = useState('');
+  const [latestDateFrom, setLatestDateFrom] = useState<Date>();
+  const [latestDateTo, setLatestDateTo] = useState<Date>();
   const [latestUpdatedAt, setLatestUpdatedAt] = useState<Date | null>(null);
 
   // Search Withdrawals state
@@ -50,8 +54,8 @@ const Withdrawals = () => {
     try {
       const res = await fetchWithdrawals({
         status: latestStatus || undefined,
-        dateFrom: latestDateFrom || undefined,
-        dateTo: latestDateTo || undefined,
+        dateFrom: latestDateFrom ? format(latestDateFrom, 'yyyy-MM-dd') : undefined,
+        dateTo: latestDateTo ? format(latestDateTo, 'yyyy-MM-dd') : undefined,
         page: p,
       });
       setLatestData(res.data);
@@ -138,14 +142,16 @@ const Withdrawals = () => {
                     <td className="p-2 text-foreground font-mono text-[10px]">{d.orderId}</td>
                     <td className="p-2 text-foreground">₹{d.amount?.toLocaleString()}</td>
                     <td className="p-2 text-foreground text-xs">{d.balanceAfter !== undefined ? `₹${d.balanceAfter.toLocaleString()}` : '-'}</td>
-                    <td className="p-2 text-muted-foreground text-[10px]">
+                    <td className="p-2 text-[10px]">
                       {d.bankDetails ? (
-                        <div className="flex flex-col gap-0.5">
-                          <span className="font-semibold text-foreground">{d.bankDetails.accountHolder}</span>
-                          <span>{d.bankDetails.bankName} - {d.bankDetails.accountNumber}</span>
+                        <div className="flex flex-col gap-1 w-max">
+                          <div><span className="text-muted-foreground inline-block w-10">Holder:</span> <span className="font-medium text-foreground">{d.bankDetails.accountHolder}</span></div>
+                          <div><span className="text-muted-foreground inline-block w-10">Bank:</span> <span className="text-foreground">{d.bankDetails.bankName}</span></div>
+                          <div><span className="text-muted-foreground inline-block w-10">A/C:</span> <span className="text-foreground font-mono">{d.bankDetails.accountNumber}</span></div>
+                          {d.bankDetails.bankCode && <div><span className="text-muted-foreground inline-block w-10">IFSC:</span> <span className="text-foreground font-mono">{d.bankDetails.bankCode}</span></div>}
                         </div>
                       ) : (
-                        '-'
+                        <span className="text-muted-foreground">-</span>
                       )}
                     </td>
                     <td className="p-2">
@@ -227,19 +233,51 @@ const Withdrawals = () => {
                 <option value="COMPLETED">COMPLETED</option>
                 <option value="FAILED">FAILED</option>
               </select>
-              <input
-                type="date"
-                className="flex h-9 w-full sm:w-[150px] rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                value={latestDateFrom}
-                onChange={(e) => setLatestDateFrom(e.target.value)}
-              />
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant={"outline"}
+                    className={cn(
+                      "w-[150px] justify-start text-left font-normal",
+                      !latestDateFrom && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {latestDateFrom ? format(latestDateFrom, "PPP") : <span>Start Date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={latestDateFrom}
+                    onSelect={setLatestDateFrom}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
               <span className="text-muted-foreground text-xs">to</span>
-              <input
-                type="date"
-                className="flex h-9 w-full sm:w-[150px] rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                value={latestDateTo}
-                onChange={(e) => setLatestDateTo(e.target.value)}
-              />
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant={"outline"}
+                    className={cn(
+                      "w-[150px] justify-start text-left font-normal",
+                      !latestDateTo && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {latestDateTo ? format(latestDateTo, "PPP") : <span>End Date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={latestDateTo}
+                    onSelect={setLatestDateTo}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
               <Button onClick={() => loadLatest(1)} disabled={latestLoading} className="w-full sm:w-auto">
                 Filter
               </Button>
