@@ -4,13 +4,14 @@ interface LastUpdatedProps {
   timestamp: Date | null;
   onRefresh?: () => void;
   loading?: boolean;
+  compact?: boolean;
 }
 
-const LastUpdated = ({ timestamp, onRefresh, loading }: LastUpdatedProps) => {
+const LastUpdated = ({ timestamp, onRefresh, loading, compact }: LastUpdatedProps) => {
   if (!timestamp) return null;
 
   return (
-    <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+    <div className={`flex items-center gap-1.5 ${compact ? 'text-[10px]' : 'text-[10px]'} text-muted-foreground`}>
       <span>Updated: {timestamp.toLocaleTimeString()}</span>
       {onRefresh && (
         <button
