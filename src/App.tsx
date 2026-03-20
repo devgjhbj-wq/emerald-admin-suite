@@ -20,6 +20,7 @@ import VipConfig from "./pages/VipConfig";
 import CreateBet from "./pages/CreateBet";
 import TurnoverConfig from "./pages/TurnoverConfig";
 import GameBets from "./pages/GameBets";
+import MoveGameBalance from "./pages/MoveGameBalance";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -48,6 +49,7 @@ const App = () => (
               <Route path="turnover-config" element={<TurnoverConfig />} />
               <Route path="create-bet" element={<CreateBet />} />
               <Route path="game-bets" element={<GameBets />} />
+              <Route path="move-game" element={<MoveGameBalance />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

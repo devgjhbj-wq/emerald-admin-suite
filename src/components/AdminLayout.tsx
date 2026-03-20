@@ -16,6 +16,7 @@ import {
   Pencil,
   Gamepad2,
   RefreshCcw,
+  ArrowRightLeft,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
@@ -36,6 +37,7 @@ const navItems = [
   { title: "Admin Logs", url: "/dashboard/logs", icon: FileText },
   { title: "Create Bet", url: "/dashboard/create-bet", icon: Pencil },
   { title: "Game Bets", url: "/dashboard/game-bets", icon: Gamepad2 },
+  { title: "Move Game Bal", url: "/dashboard/move-game", icon: ArrowRightLeft },
 ];
 
 const AdminLayout = () => {

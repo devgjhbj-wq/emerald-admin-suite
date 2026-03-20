@@ -148,6 +148,9 @@ export const searchBetsByMember = (member: string, params?: { page?: number; lim
 
 export const syncBetRecords = () => api.post('/api/game/sync-bets');
 
+export const moveGameToWallet = (data: { userId?: number; userIdTo?: number; userIds?: number[]; providerCode?: string }) =>
+  api.post('/api/admin/move-game-to-wallet', data);
+
 // Turnover Management
 export const fetchTurnoverConfig = () => api.get('/api/admin/turnover-config');
 

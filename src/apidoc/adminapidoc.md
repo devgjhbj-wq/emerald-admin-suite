@@ -473,53 +473,70 @@ POST /game/sync-bets
 POST /admin/move-game-to-wallet
 ```
 
-**Description:** Admin endpoint to transfer a user's game balance from game provider to their main wallet. This moves all funds from the specified provider (JE, JD, PG, TU) back to the user's wallet balance.
+**Description:** Admin endpoint to transfer game balance from providers (PG, JE, JD, TU) to wallet for multiple users. Supports single user, user range, or array of users. Maximum 100 users per request.
 
-**Body:**
+**Body Options:**
 
 ```json
+// Option 1: Range of users (userId to userIdTo)
 {
   "userId": 32545513,
-  "providerCode": "JE"
+  "userIdTo": 32545563,
+  "providerCode": "ALL"
+}
+
+// Option 2: Single user
+{
+  "userId": 32545513,
+  "providerCode": "ALL"
+}
+
+// Option 3: Array of users
+{
+  "userIds": [32545513, 32545514],
+  "providerCode": "ALL"
 }
 ```
 
 | Param | Type | Required | Description |
 |-------|------|----------|-------------|
-| userId | number | Yes | User ID to move balance for |
-| providerCode | string | No | Provider code: JE, JD, PG, TU (default: JE) |
+| userId | number | Yes* | Start user ID (*required if userIds not provided) |
+| userIdTo | number | No | End user ID for range (inclusive) |
+| userIds | array | Yes* | Array of user IDs (*required if userId not provided) |
+| providerCode | string | No | Provider code: PG, JE, JD, TU, or ALL (default: ALL) |
 
-**Response (Success):**
-
-```json
-{
-  "status": "success",
-  "msg": "Balance moved from game to wallet",
-  "userId": 32545513,
-  "providerCode": "JE",
-  "moveOut": {
-    "amount": 500,
-    "referenceId": "GMOUT455132M5ABC1234"
-  },
-  "walletBalance": 1500
-}
-```
-
-**Response (No Balance):**
+**Response:**
 
 ```json
 {
   "status": "success",
-  "msg": "No balance to move out from game",
-  "userId": 32545513,
-  "providerCode": "JE",
-  "moveOut": {
-    "amount": 0
-  }
+  "msg": "Balance moved from all games to wallet",
+  "totalUsersProcessed": 50,
+  "totalAmountMoved": 5000,
+  "users": [
+    {
+      "userId": 32545513,
+      "success": true,
+      "providers": [
+        { "provider": "JE", "amount": 100, "success": true, "referenceId": "GMOUT455132M5ABC1234" },
+        { "provider": "JD", "amount": 50, "success": true, "referenceId": "GMOUT455132M5ABC1235" },
+        { "provider": "PG", "amount": 0, "success": true, "message": "No balance" },
+        { "provider": "TU", "amount": 25, "success": true, "referenceId": "GMOUT455132M5ABC1236" }
+      ],
+      "moved": 175,
+      "walletBalance": 1175
+    },
+    {
+      "userId": 32545514,
+      "success": false,
+      "error": "Account not found",
+      "providers": [],
+      "moved": 0,
+      "walletBalance": 0
+    }
+  ]
 }
 ```
-
-**Note:** This creates a `gameOut` transaction record in the user's ledger with remark `ADMIN_MOVE_OUT_{providerCode}`.
 
 ---
 
