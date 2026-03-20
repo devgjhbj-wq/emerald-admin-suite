@@ -88,7 +88,7 @@ const AdminLayout = () => {
     : navItems.find((n) => n.url === location.pathname)?.title || location.pathname.split("/").pop();
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="h-screen w-full bg-background flex overflow-hidden">
       {/* Desktop Sidebar */}
       <aside className="hidden lg:flex flex-col w-56 border-r border-border bg-card">
         <div className="p-4 border-b border-border flex items-center gap-2.5">
@@ -122,7 +122,7 @@ const AdminLayout = () => {
 
       {/* Mobile Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-60 bg-card border-r border-border transform transition-transform duration-300 lg:hidden ${
+        className={`fixed inset-y-0 left-0 z-50 w-60 bg-card border-r border-border flex flex-col transform transition-transform duration-300 lg:hidden ${
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -135,8 +135,10 @@ const AdminLayout = () => {
             <X className="w-4 h-4" />
           </button>
         </div>
-        <NavContent />
-        <div className="absolute bottom-0 left-0 right-0 p-2 border-t border-border">
+        <div className="flex-1 overflow-y-auto">
+          <NavContent />
+        </div>
+        <div className="p-2 border-t border-border bg-card">
           <button
             onClick={handleLogout}
             className="flex items-center gap-2.5 px-3 py-2 w-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors text-xs font-medium"
