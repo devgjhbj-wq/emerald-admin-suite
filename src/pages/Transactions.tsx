@@ -16,16 +16,26 @@ const Transactions = () => {
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
 
   const load = async (p = 1) => {
-    if (!userId.trim()) return;
+    const q = userId.trim();
+    if (!q) {
+      toast.error('User ID is required');
+      return;
+    }
+    // Validate numeric user ID
+    if (isNaN(Number(q))) {
+      toast.error('User ID must be a number');
+      return;
+    }
     setAuthToken(token);
     setLoading(true);
     try {
-      const res = await fetchTransactions(userId.trim(), p);
+      const res = await fetchTransactions(q, p);
       setData(res.data);
       setPage(p);
       setUpdatedAt(new Date());
     } catch (err: any) {
-      toast.error(err.response?.data?.msg || 'Failed to load transactions');
+      const errorMsg = err.response?.data?.msg || 'Failed to load transactions';
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -57,29 +67,35 @@ const Transactions = () => {
               <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b border-border bg-secondary/30">
+                    <th className="text-left p-2 text-muted-foreground font-medium">User ID</th>
                     <th className="text-left p-2 text-muted-foreground font-medium">Type</th>
                     <th className="text-left p-2 text-muted-foreground font-medium">Amount</th>
                     <th className="text-left p-2 text-muted-foreground font-medium">Balance After</th>
                     <th className="text-left p-2 text-muted-foreground font-medium">Status</th>
+                    <th className="text-left p-2 text-muted-foreground font-medium">Order ID</th>
                     <th className="text-left p-2 text-muted-foreground font-medium">Remark</th>
                     <th className="text-left p-2 text-muted-foreground font-medium">Date</th>
-                    {data.items.some((t: any) => t.updatedAt) && <th className="text-left p-2 text-muted-foreground font-medium">Updated At</th>}
                   </tr>
                 </thead>
                 <tbody>
                   {data.items.map((t: any, i: number) => (
                     <tr key={i} className="border-b border-border last:border-0 hover:bg-secondary/20 transition-colors">
+                      <td className="p-2 text-foreground font-medium">{t.userId}</td>
                       <td className="p-2 text-foreground font-medium">{t.type}</td>
                       <td className="p-2 text-foreground">₹{t.amount?.toLocaleString()}</td>
                       <td className="p-2 text-foreground">₹{t.balanceAfter?.toLocaleString()}</td>
                       <td className="p-2">
-                        <span className={`px-1.5 py-0.5 text-[10px] font-medium ${t.status === 'SUCCESS' ? 'bg-primary/20 text-primary' : 'bg-destructive/20 text-destructive'}`}>
+                        <span className={`px-1.5 py-0.5 text-[10px] font-medium ${
+                          t.status === 'SUCCESS' ? 'bg-primary/20 text-primary' :
+                          t.status === 'PENDING' ? 'bg-yellow-500/20 text-yellow-400' :
+                          'bg-destructive/20 text-destructive'
+                        }`}>
                           {t.status}
                         </span>
                       </td>
+                      <td className="p-2 text-muted-foreground font-mono text-[9px]">{t.orderId || '—'}</td>
                       <td className="p-2 text-muted-foreground">{t.remark || '—'}</td>
-                      <td className="p-2 text-muted-foreground">{new Date(t.createdAt).toLocaleString()}</td>
-                      {data.items.some((t: any) => t.updatedAt) && <td className="p-2 text-muted-foreground">{t.updatedAt ? new Date(t.updatedAt).toLocaleString() : '—'}</td>}
+                      <td className="p-2 text-muted-foreground whitespace-nowrap">{new Date(t.createdAt).toLocaleString()}</td>
                     </tr>
                   ))}
                 </tbody>

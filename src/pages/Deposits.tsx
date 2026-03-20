@@ -50,7 +50,15 @@ const Deposits = () => {
 
   const loadByUser = async (p = 1) => {
     const q = userId.trim();
-    if (!q) return;
+    if (!q) {
+      toast.error('User ID is required');
+      return;
+    }
+    // Validate numeric user ID
+    if (isNaN(Number(q))) {
+      toast.error('User ID must be a number');
+      return;
+    }
     setAuthToken(token);
     setLoading(true);
     setLastSearchType('user');
@@ -60,7 +68,8 @@ const Deposits = () => {
       setPage(p);
       setUpdatedAt(new Date());
     } catch (err: any) {
-      toast.error(err.response?.data?.msg || 'Failed to load deposits');
+      const errorMsg = err.response?.data?.msg || 'Failed to load deposits';
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -68,17 +77,32 @@ const Deposits = () => {
 
   const loadByOrder = async () => {
     const q = orderId.trim();
-    if (!q) return;
+    if (!q) {
+      toast.error('Order ID is required');
+      return;
+    }
     setAuthToken(token);
     setLoading(true);
     setLastSearchType('order');
     try {
       const res = await fetchDepositByOrder(q);
-      setData(res.data);
+      // API returns items array
+      if (res.data?.items && Array.isArray(res.data.items)) {
+        setData({
+          items: res.data.items,
+          total: res.data.items.length,
+          limit: 1,
+          page: 1,
+          status: res.data.status
+        });
+      } else {
+        toast.error('Deposit not found');
+      }
       setPage(1);
       setUpdatedAt(new Date());
     } catch (err: any) {
-      toast.error(err.response?.data?.msg || 'Failed to load deposit');
+      const errorMsg = err.response?.data?.msg || 'Failed to load deposit';
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -135,28 +159,31 @@ const Deposits = () => {
               <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b border-border bg-secondary/30">
+                    <th className="text-left p-2 text-muted-foreground font-medium">User ID</th>
                     <th className="text-left p-2 text-muted-foreground font-medium">Order ID</th>
                     <th className="text-left p-2 text-muted-foreground font-medium">Amount</th>
+                    <th className="text-left p-2 text-muted-foreground font-medium">Currency</th>
                     <th className="text-left p-2 text-muted-foreground font-medium">Status</th>
-                    <th className="text-left p-2 text-muted-foreground font-medium">Channel</th>
-                    <th className="text-left p-2 text-muted-foreground font-medium">Date</th>
-                    {data.items.some((d: any) => d.updatedAt) && <th className="text-left p-2 text-muted-foreground font-medium">Updated At</th>}
+                    <th className="text-left p-2 text-muted-foreground font-medium">Gateway Order</th>
+                    <th className="text-left p-2 text-muted-foreground font-medium">Channel</th>                    <th className="text-left p-2 text-muted-foreground font-medium">Date</th>
                     <th className="text-left p-2 text-muted-foreground font-medium">Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {data.items.map((d: any, i: number) => (
                     <tr key={i} className="border-b border-border last:border-0 hover:bg-secondary/20 transition-colors">
+                      <td className="p-2 text-foreground font-medium">{d.userId}</td>
                       <td className="p-2 text-foreground font-mono text-[10px]">{d.orderId}</td>
                       <td className="p-2 text-foreground">₹{d.amount?.toLocaleString()}</td>
+                      <td className="p-2 text-muted-foreground">{d.currency || 'INR'}</td>
                       <td className="p-2">
                         <span className={`px-1.5 py-0.5 text-[10px] font-medium ${statusColor[d.status] || 'bg-muted text-muted-foreground'}`}>
                           {d.status}
                         </span>
                       </td>
+                      <td className="p-2 text-muted-foreground text-[9px]">{d.gatewayOrderNo || '—'}</td>
                       <td className="p-2 text-muted-foreground">{d.channelName || '—'}</td>
-                      <td className="p-2 text-muted-foreground">{new Date(d.createdAt).toLocaleString()}</td>
-                      {data.items.some((d: any) => d.updatedAt) && <td className="p-2 text-muted-foreground">{d.updatedAt ? new Date(d.updatedAt).toLocaleString() : '—'}</td>}
+                      <td className="p-2 text-muted-foreground whitespace-nowrap">{new Date(d.createdAt).toLocaleString()}</td>
                       <td className="p-2">
                         {d.status !== 'SUCCESS' ? (
                           <Button

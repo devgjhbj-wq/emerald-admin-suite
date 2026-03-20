@@ -124,8 +124,11 @@ const UserSearch = () => {
                   Change Status
                 </Button>
               </div>
+              <InfoRow label="Account User" value={account.user} />
               <InfoRow label="Balance" value={`₹${account.balance?.toLocaleString()}`} />
-              <InfoRow label="Currency" value={account.currency} />
+              <InfoRow label="Withdrawable" value={`₹${account.withdrawable?.toLocaleString() || 0}`} />
+              <InfoRow label="Total Deposits" value={`₹${account.totalDeposits?.toLocaleString() || 0}`} />
+              <InfoRow label="Turnover Requirement" value={`₹${account.turnover_requirement?.toLocaleString() || 0}`} />
               <InfoRow
                 label="Status"
                 value={
@@ -139,8 +142,10 @@ const UserSearch = () => {
               />
               {account.statusRemark && <InfoRow label="Remark" value={account.statusRemark} />}
               <InfoRow label="VIP Level" value={account.vipLevel || '—'} />
-              <InfoRow label="Withdraw Daily Limit" value={`₹${account.withdrawDailyLimit?.toLocaleString()}`} />
-              <InfoRow label="Created" value={new Date(account.createdAt).toLocaleString()} />
+              <InfoRow label="Game Member Created" value={account.gameMemberCreated ? 'Yes' : 'No'} />
+              <InfoRow label="Withdraw Daily Limit" value={`₹${account.withdrawDailyLimit?.toLocaleString() || 0}`} />
+              <InfoRow label="Created" value={account.createdAt ? new Date(account.createdAt).toLocaleString() : '—'} />
+              <InfoRow label="Updated" value={account.updatedAt ? new Date(account.updatedAt).toLocaleString() : '—'} />
             </div>
           )}
         </div>

@@ -42,19 +42,56 @@ export const overrideUserBank = (userId: number, bankName: string, bankCode: str
   api.put('/api/admin/user/bind-bank', { userId, bankName, bankCode, accountNumber, accountHolder });
 
 // Transactions
-export const fetchTransactions = (userId: string, page = 1, limit = 25) =>
-  api.get(`/api/admin/transactions?userId=${userId}&page=${page}&limit=${limit}`);
+/**
+ * Fetch user transactions (paginated)
+ * @param userId User ID
+ * @param page Page number (default: 1)
+ * @param limit Items per page (default: 25, max: 100)
+ */
+export const fetchTransactions = (userId: string, page = 1, limit = 25) => {
+  if (!userId || userId.trim().length === 0) {
+    return Promise.reject(new Error('User ID is required'));
+  }
+  const validatedLimit = Math.min(limit, 100); // Max 100
+  return api.get(`/api/admin/transactions?userId=${userId}&page=${page}&limit=${validatedLimit}`);
+};
 
 // Deposits
-export const fetchDepositsByUser = (userId: string, page = 1, limit = 25) =>
-  api.get(`/api/admin/deposits?userId=${userId}&page=${page}&limit=${limit}`);
+/**
+ * Fetch deposits by User ID
+ * @param userId User ID
+ * @param page Page number (default: 1)
+ * @param limit Items per page (default: 25, max: 100)
+ */
+export const fetchDepositsByUser = (userId: string, page = 1, limit = 25) => {
+  if (!userId || userId.trim().length === 0) {
+    return Promise.reject(new Error('User ID is required'));
+  }
+  const validatedLimit = Math.min(limit, 100); // Max 100
+  return api.get(`/api/admin/deposits?userId=${userId}&page=${page}&limit=${validatedLimit}`);
+};
 
-export const fetchDepositByOrder = (orderId: string) =>
-  api.get(`/api/admin/deposits?orderId=${orderId}`);
+/**
+ * Fetch deposit by Order ID
+ * @param orderId Deposit order ID
+ */
+export const fetchDepositByOrder = (orderId: string) => {
+  if (!orderId || orderId.trim().length === 0) {
+    return Promise.reject(new Error('Order ID is required'));
+  }
+  return api.get(`/api/admin/deposits?orderId=${orderId}`);
+};
 
-// Approve Deposit
-export const approveDeposit = (orderId: string) =>
-  api.post('/api/admin/deposits/approve', { orderId });
+/**
+ * Approve a deposit order
+ * @param orderId Deposit order ID to approve
+ */
+export const approveDeposit = (orderId: string) => {
+  if (!orderId || orderId.trim().length === 0) {
+    return Promise.reject(new Error('Order ID is required'));
+  }
+  return api.post('/api/admin/deposits/approve', { orderId });
+};
 
 // Withdrawals
 /**
