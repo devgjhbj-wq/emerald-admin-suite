@@ -467,6 +467,60 @@ POST /game/sync-bets
 }
 ```
 
+### Move Game Balance to Wallet (Admin)
+
+```
+POST /admin/move-game-to-wallet
+```
+
+**Description:** Admin endpoint to transfer a user's game balance from game provider to their main wallet. This moves all funds from the specified provider (JE, JD, PG, TU) back to the user's wallet balance.
+
+**Body:**
+
+```json
+{
+  "userId": 32545513,
+  "providerCode": "JE"
+}
+```
+
+| Param | Type | Required | Description |
+|-------|------|----------|-------------|
+| userId | number | Yes | User ID to move balance for |
+| providerCode | string | No | Provider code: JE, JD, PG, TU (default: JE) |
+
+**Response (Success):**
+
+```json
+{
+  "status": "success",
+  "msg": "Balance moved from game to wallet",
+  "userId": 32545513,
+  "providerCode": "JE",
+  "moveOut": {
+    "amount": 500,
+    "referenceId": "GMOUT455132M5ABC1234"
+  },
+  "walletBalance": 1500
+}
+```
+
+**Response (No Balance):**
+
+```json
+{
+  "status": "success",
+  "msg": "No balance to move out from game",
+  "userId": 32545513,
+  "providerCode": "JE",
+  "moveOut": {
+    "amount": 0
+  }
+}
+```
+
+**Note:** This creates a `gameOut` transaction record in the user's ledger with remark `ADMIN_MOVE_OUT_{providerCode}`.
+
 ---
 
 ## 7. VIP Configuration

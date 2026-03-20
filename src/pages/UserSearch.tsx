@@ -17,12 +17,12 @@ const UserSearch = () => {
   const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
-  
+
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [statusLoading, setStatusLoading] = useState(false);
   const [newStatus, setNewStatus] = useState<'active' | 'suspended' | 'inactive'>('active');
   const [statusRemark, setStatusRemark] = useState('');
-  
+
   const [bankDialogOpen, setBankDialogOpen] = useState(false);
   const [bankLoading, setBankLoading] = useState(false);
   const [bankName, setBankName] = useState('');
@@ -114,17 +114,16 @@ const UserSearch = () => {
               </div>
               <InfoRow label="Balance" value={`₹${account.balance?.toLocaleString()}`} />
               <InfoRow label="Currency" value={account.currency} />
-              <InfoRow 
-                label="Status" 
+              <InfoRow
+                label="Status"
                 value={
-                  <span className={`px-1.5 py-0.5 text-[10px] font-medium ${
-                    account.status === 'active' ? 'bg-green-500/20 text-green-400' :
-                    account.status === 'suspended' ? 'bg-yellow-500/20 text-yellow-400' :
-                    'bg-red-500/20 text-red-400'
-                  }`}>
+                  <span className={`px-1.5 py-0.5 text-[10px] font-medium ${account.status === 'active' ? 'bg-green-500/20 text-green-400' :
+                      account.status === 'suspended' ? 'bg-yellow-500/20 text-yellow-400' :
+                        'bg-red-500/20 text-red-400'
+                    }`}>
                     {account.status}
                   </span>
-                } 
+                }
               />
               {account.statusRemark && <InfoRow label="Remark" value={account.statusRemark} />}
               <InfoRow label="VIP Level" value={account.vipLevel || '—'} />
@@ -175,11 +174,10 @@ const UserSearch = () => {
               Device Risk Assessment
             </h3>
             <div className="flex items-center gap-2">
-              <span className={`px-2 py-0.5 text-xs font-medium ${
-                deviceRisk.flagged 
-                  ? 'bg-red-500/20 text-red-400' 
+              <span className={`px-2 py-0.5 text-xs font-medium ${deviceRisk.flagged
+                  ? 'bg-red-500/20 text-red-400'
                   : 'bg-green-500/20 text-green-400'
-              }`}>
+                }`}>
                 {deviceRisk.flagged ? 'Flagged' : 'Safe'}
               </span>
               <span className="text-[10px] text-muted-foreground">
