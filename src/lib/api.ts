@@ -28,7 +28,13 @@ export const setAuthToken = (token: string | null) => {
 };
 
 // Dashboard
-export const fetchDashboard = () => api.get('/api/admin/dashboard');
+export const fetchDashboard = (params?: { period?: string; date?: string }) => {
+  const query = new URLSearchParams();
+  if (params?.period) query.set('period', params.period);
+  if (params?.date) query.set('date', params.date);
+  const url = `/api/admin/dashboard${query.toString() ? `?${query.toString()}` : ''}`;
+  return api.get(url);
+};
 
 // User search
 export const searchUser = (userId: string) => api.get(`/api/admin/user?userId=${userId}`);

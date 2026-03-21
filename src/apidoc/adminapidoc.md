@@ -24,14 +24,79 @@ Authorization: Bearer <admin_token>
 GET /admin/dashboard
 ```
 
+or with date filter:
+
+```
+GET /admin/dashboard?period=today
+GET /admin/dashboard?period=month
+GET /admin/dashboard?date=2026-03-20
+```
+
+**Query Params:**
+| Param | Type | Required | Description |
+|-------|------|---------|-------------|
+| period | string | No | Filter by period: `today`, `month` |
+| date | string | No | Filter by specific date (YYYY-MM-DD) |
+
 **Response:**
 
 ```json
 {
-  "totalUsers": 1000,
-  "totalDeposits": 50000.0
+  "status": "success",
+  "period": "today",
+  "overview": {
+    "totalUsers": 1000,
+    "newUsers": 25
+  },
+  "deposits": {
+    "total": 50000.0,
+    "count": 50,
+    "pendingCount": 5
+  },
+  "withdrawals": {
+    "total": 30000.0,
+    "count": 30,
+    "success": {
+      "count": 25,
+      "total": 25000.0
+    },
+    "pending": {
+      "count": 3,
+      "total": 3000.0
+    },
+    "failed": {
+      "count": 2,
+      "total": 2000.0
+    },
+    "byStatus": {
+      "SUCCESS": { "count": 25, "total": 25000.0 },
+      "PENDING": { "count": 2, "total": 2000.0 },
+      "AUDITING": { "count": 1, "total": 1000.0 },
+      "FAILED": { "count": 2, "total": 2000.0 }
+    }
+  },
+  "agentCommission": {
+    "total": 500.0,
+    "count": 20
+  }
 }
 ```
+
+| Field | Description |
+|-------|-------------|
+| period | Filter applied: `today`, `month`, or date string |
+| overview.totalUsers | Total registered users |
+| overview.newUsers | New users in selected period |
+| deposits.total | Total deposit amount |
+| deposits.count | Number of successful deposits |
+| deposits.pendingCount | Number of pending deposits |
+| withdrawals.total | Total withdrawal amount |
+| withdrawals.success | Successful withdrawals |
+| withdrawals.pending | Pending + Auditing withdrawals |
+| withdrawals.failed | Failed withdrawals |
+| withdrawals.byStatus | Breakdown by status |
+| agentCommission.total | Total agent commission paid |
+| agentCommission.count | Number of commission transactions |
 
 ---
 
@@ -118,11 +183,11 @@ PATCH /admin/user
 }
 ```
 
-| Param  | Type   | Required | Description                         |
-| ------ | ------ | -------- | ----------------------------------- |
-| userId | number | Yes      | User ID                             |
-| status | string | Yes      | Status: active, suspended, inactive |
-| remark | string | No       | Reason for status change            |
+| Param | Type | Required | Description |
+|-------|------|---------|-------------|
+| userId | number | Yes | User ID |
+| status | string | Yes | Status: active, suspended, inactive |
+| remark | string | No | Reason for status change |
 
 **Response:**
 
@@ -386,13 +451,13 @@ GET /admin/withdrawals?orderId=WD1234567890123456
 
 **Withdrawal Status Values:**
 
-| Status    | Description                                    |
-| --------- | ---------------------------------------------- |
-| PENDING   | Withdrawal requested, awaiting admin approval  |
-| AUDITING  | Admin approved, SimplyPay payout order created |
-| SUCCESS   | Payout completed successfully                  |
-| FAILED    | Payout failed (user refunded automatically)    |
-| CANCELLED | Payout cancelled/refunded                      |
+| Status | Description |
+|--------|-------------|
+| PENDING | Withdrawal requested, awaiting admin approval |
+| AUDITING | Admin approved, SimplyPay payout order created |
+| SUCCESS | Payout completed successfully |
+| FAILED | Payout failed (user refunded automatically) |
+| CANCELLED | Payout cancelled/refunded |
 
 ### Approve Withdrawal Order
 
@@ -578,14 +643,14 @@ POST /admin/bet-record
 }
 ```
 
-| Param   | Type   | Required | Description                              |
-| ------- | ------ | -------- | ---------------------------------------- |
-| userId  | number | Yes      | User ID                                  |
-| amount  | number | Yes      | Bet amount (positive=win, negative=loss) |
-| product | string | No       | Game type (default: SL)                  |
-| gameId  | string | No       | Game ID (default: "0")                   |
-| site    | string | No       | Provider code (default: JE)              |
-| status  | number | No       | Status: 1=valid (default)                |
+| Param | Type | Required | Description |
+|-------|------|---------|-------------|
+| userId | number | Yes | User ID |
+| amount | number | Yes | Bet amount (positive=win, negative=loss) |
+| product | string | No | Game type (default: SL) |
+| gameId | string | No | Game ID (default: "0") |
+| site | string | No | Provider code (default: JE) |
+| status | number | No | Status: 1=valid (default) |
 
 **Response:**
 
@@ -796,12 +861,12 @@ POST /admin/turnover/add
 }
 ```
 
-| Param     | Type   | Required | Description                 |
-| --------- | ------ | -------- | --------------------------- |
-| userId    | number | Yes      | User ID                     |
-| amount    | number | Yes      | Amount to add               |
-| type      | string | No       | Type (default: ADMIN_BONUS) |
-| sourceRef | string | No       | Reference ID                |
+| Param | Type | Required | Description |
+|-------|------|---------|-------------|
+| userId | number | Yes | User ID |
+| amount | number | Yes | Amount to add |
+| type | string | No | Type (default: ADMIN_BONUS) |
+| sourceRef | string | No | Reference ID |
 
 **Response:**
 
@@ -850,12 +915,12 @@ POST /admin/move-game-to-wallet
 }
 ```
 
-| Param        | Type   | Required | Description                                        |
-| ------------ | ------ | -------- | -------------------------------------------------- |
-| userId       | number | Yes\*    | Start user ID (\*required if userIds not provided) |
-| userIdTo     | number | No       | End user ID for range                              |
-| userIds      | array  | Yes\*    | Array of user IDs                                  |
-| providerCode | string | No       | PG, JE, JD, TU, or ALL (default: ALL)              |
+| Param | Type | Required | Description |
+|-------|------|---------|-------------|
+| userId | number | Yes* | Start user ID (*required if userIds not provided) |
+| userIdTo | number | No | End user ID for range |
+| userIds | array | Yes* | Array of user IDs |
+| providerCode | string | No | PG, JE, JD, TU, or ALL (default: ALL) |
 
 **Response:**
 
