@@ -268,12 +268,12 @@ const Withdrawals = () => {
   return (
     <div className="space-y-3">
       {/* Search & Filter Bar */}
-      <div className="bg-card border border-border p-3 rounded-lg shadow-sm space-y-3">
+      <div className="bg-card border border-border p-2 rounded-lg shadow-sm space-y-2">
         {/* Row 1: ID Searches */}
-        <div className="flex flex-wrap items-end gap-4">
-          <div className="flex-1 min-w-[200px]">
+        <div className="flex flex-wrap items-end gap-3">
+          <div className="flex-1 min-w-[180px]">
             <label className="text-[10px] font-medium text-muted-foreground uppercase mb-1 block">User ID Search</label>
-            <div className="flex gap-1.5">
+            <div className="flex gap-1">
               <div className="flex-1">
                 <SearchBar 
                   value={userId} 
@@ -290,16 +290,16 @@ const Withdrawals = () => {
                 onClick={() => loadByUserId(1)} 
                 disabled={loading} 
                 size="sm"
-                className="h-7 px-3 text-xs"
+                className="h-6 px-2 text-[11px]"
               >
                 Search
               </Button>
             </div>
           </div>
 
-          <div className="flex-1 min-w-[200px]">
+          <div className="flex-1 min-w-[180px]">
             <label className="text-[10px] font-medium text-muted-foreground uppercase mb-1 block">Order ID Search</label>
-            <div className="flex gap-1.5">
+            <div className="flex gap-1">
               <div className="flex-1">
                 <SearchBar 
                   value={orderId} 
@@ -316,7 +316,7 @@ const Withdrawals = () => {
                 onClick={loadByOrderId} 
                 disabled={loading} 
                 size="sm"
-                className="h-7 px-3 text-xs"
+                className="h-6 px-2 text-[11px]"
               >
                 Search
               </Button>
@@ -325,11 +325,11 @@ const Withdrawals = () => {
         </div>
 
         {/* Row 2: Global Filters */}
-        <div className="flex flex-wrap items-end gap-3 pt-2 border-t border-border/50">
-          <div className="w-[140px]">
+        <div className="flex flex-wrap items-end gap-2 pt-2 border-t border-border/50">
+          <div className="w-[120px]">
             <label className="text-[10px] font-medium text-muted-foreground uppercase mb-1 block">Status</label>
             <select
-              className="flex h-7 w-full rounded border border-input bg-background px-2 py-1 text-xs shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              className="flex h-6 w-full rounded border border-input bg-background px-2 py-0.5 text-[11px] shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               value={status}
               onChange={(e) => setStatus(e.target.value)}
             >
@@ -344,17 +344,17 @@ const Withdrawals = () => {
 
           <div className="flex flex-col gap-1">
             <label className="text-[10px] font-medium text-muted-foreground uppercase mb-0.5 block">Date Range</label>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1">
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
                     className={cn(
-                      "w-[150px] justify-start text-left font-normal text-[11px] h-7 px-2",
+                      "w-[130px] justify-start text-left font-normal text-[10px] h-6 px-2",
                       !dateFrom && "text-muted-foreground"
                     )}
                   >
-                    <CalendarIcon className="mr-1.5 h-3 w-3" />
+                    <CalendarIcon className="mr-1 h-2.5 w-2.5" />
                     {dateFrom ? format(dateFrom, "MMM dd, yyyy") : "From"}
                   </Button>
                 </PopoverTrigger>
@@ -376,11 +376,11 @@ const Withdrawals = () => {
                   <Button
                     variant="outline"
                     className={cn(
-                      "w-[150px] justify-start text-left font-normal text-[11px] h-7 px-2",
+                      "w-[130px] justify-start text-left font-normal text-[10px] h-6 px-2",
                       !dateTo && "text-muted-foreground"
                     )}
                   >
-                    <CalendarIcon className="mr-1.5 h-3 w-3" />
+                    <CalendarIcon className="mr-1 h-2.5 w-2.5" />
                     {dateTo ? format(dateTo, "MMM dd, yyyy") : "To"}
                   </Button>
                 </PopoverTrigger>
@@ -399,25 +399,25 @@ const Withdrawals = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <Button 
               onClick={() => loadGlobalSearch(1)} 
               disabled={loading} 
               size="sm"
-              className="h-7 px-4 text-xs font-semibold"
+              className="h-6 px-3 text-[11px] font-semibold"
             >
-              {loading && lastSearchType === 'global' ? <Loading size={12} className="mr-1" /> : null}
+              {loading && lastSearchType === 'global' ? <Loading size={10} className="mr-1" /> : null}
               Global Search
             </Button>
             <Button 
               onClick={handleClear} 
               variant="outline" 
               size="sm"
-              className="h-7 px-3 text-xs"
+              className="h-6 px-2 text-[11px]"
             >
               Reset
             </Button>
-            <div className="ml-1 border-l border-border pl-2 flex items-center h-7">
+            <div className="ml-1 border-l border-border pl-2 flex items-center h-6">
               <LastUpdated 
                 timestamp={updatedAt} 
                 onRefresh={handleRefresh} 

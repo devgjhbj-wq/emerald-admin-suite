@@ -138,7 +138,7 @@ const SearchBar = ({
                 <ToggleGroupItem 
                   key={mode.value}
                   value={mode.value}
-                  className="text-xs h-7 px-2 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+                  className="text-[10px] h-6 px-1.5 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
                   aria-label={mode.label}
                 >
                   {mode.label}
@@ -156,7 +156,7 @@ const SearchBar = ({
             onKeyDown={handleKeyDown}
             onFocus={() => setShowSuggestions(true)}
             placeholder={placeholder}
-            className="bg-secondary/50 text-foreground placeholder:text-muted-foreground border-border w-full h-7 px-2 py-1 text-xs pr-6"
+            className="bg-secondary/50 text-foreground placeholder:text-muted-foreground border-border w-full h-6 px-2 py-0.5 text-[11px] pr-6"
           />
           {value && (
             <button
@@ -164,7 +164,7 @@ const SearchBar = ({
               className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
               aria-label="Clear search"
             >
-              <X className="w-3 h-3" />
+              <X className="w-2.5 h-2.5" />
             </button>
           )}
         </div>
@@ -172,9 +172,9 @@ const SearchBar = ({
           <Button 
             onClick={handleSearch} 
             disabled={loading || !value.trim()} 
-            className="h-7 px-2 whitespace-nowrap text-xs flex-shrink-0"
+            className="h-6 px-2 whitespace-nowrap text-[11px] flex-shrink-0"
           >
-            <Search className="w-3 h-3 mr-1" />
+            <Search className="w-2.5 h-2.5 mr-1" />
             {loading ? 'Searching...' : 'Go'}
           </Button>
         )}
