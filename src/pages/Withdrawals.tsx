@@ -35,6 +35,7 @@ const Withdrawals = () => {
   const [results, setResults] = useState<WithdrawalResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
+  const [pageInput, setPageInput] = useState('1');
   const [lastSearchType, setLastSearchType] = useState<'user' | 'order' | 'global'>('global');
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
   const [approvingId, setApprovingId] = useState<string | null>(null);
@@ -80,6 +81,7 @@ const Withdrawals = () => {
       });
       setResults(response.data);
       setPage(p);
+      setPageInput(p.toString());
       setUpdatedAt(new Date());
     } catch (err: any) {
       toast.error(err.response?.data?.msg || 'Failed to fetch user withdrawals');
@@ -108,6 +110,7 @@ const Withdrawals = () => {
           status: response.data.status
         });
         setPage(1);
+        setPageInput('1');
       } else {
         setResults(null);
         toast.error('Order not found');
@@ -140,6 +143,7 @@ const Withdrawals = () => {
       const response = await fetchWithdrawals(filters);
       setResults(response.data);
       setPage(p);
+      setPageInput(p.toString());
       setUpdatedAt(new Date());
     } catch (err: any) {
       toast.error(err.response?.data?.msg || 'Failed to perform Global Search');
@@ -147,6 +151,18 @@ const Withdrawals = () => {
       setLoading(false);
     }
   }, [token, status, dateFrom, dateTo]);
+
+  const handlePageGo = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      const p = parseInt(pageInput);
+      if (!isNaN(p) && p > 0 && p <= totalPages) {
+        if (lastSearchType === 'user') loadByUserId(p);
+        else if (lastSearchType === 'global') loadGlobalSearch(p);
+      } else {
+        toast.error(`Invalid page number. Please enter between 1 and ${totalPages}`);
+      }
+    }
+  };
 
   const handleRefresh = () => {
     if (lastSearchType === 'user') loadByUserId(page);
@@ -200,11 +216,11 @@ const Withdrawals = () => {
                   <td className="p-2 text-foreground">₹{d.amount?.toLocaleString()}</td>
                   <td className="p-2 text-[10px]">
                     {d.bankDetails ? (
-                      <div className="grid grid-cols-2 gap-x-4 gap-y-1 w-max">
-                        <div className="flex gap-1.5"><span className="text-muted-foreground font-medium w-7">A/C:</span><span className="text-foreground font-mono">{d.bankDetails.accountNumber}</span></div>
-                        <div className="flex gap-1.5"><span className="text-muted-foreground font-medium w-7">IFSC:</span><span className="text-foreground font-mono">{d.bankDetails.ifsc || d.bankDetails.bankCode || '-'}</span></div>
-                        <div className="flex gap-1.5"><span className="text-muted-foreground font-medium w-7">Name:</span><span className="text-foreground">{d.bankDetails.accountHolder}</span></div>
-                        <div className="flex gap-1.5"><span className="text-muted-foreground font-medium w-7">Bank:</span><span className="text-foreground truncate max-w-[120px]" title={d.bankDetails.bankName}>{d.bankDetails.bankName}</span></div>
+                      <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 w-max">
+                        <div className="flex gap-1"><span className="text-muted-foreground font-medium w-7">A/C:</span><span className="text-foreground font-mono">{d.bankDetails.accountNumber}</span></div>
+                        <div className="flex gap-1"><span className="text-muted-foreground font-medium w-7">IFSC:</span><span className="text-foreground font-mono">{d.bankDetails.ifsc || d.bankDetails.bankCode || '-'}</span></div>
+                        <div className="flex gap-1"><span className="text-muted-foreground font-medium w-7">Name:</span><span className="text-foreground">{d.bankDetails.accountHolder}</span></div>
+                        <div className="flex gap-1"><span className="text-muted-foreground font-medium w-7">Bank:</span><span className="text-foreground truncate max-w-[100px]" title={d.bankDetails.bankName}>{d.bankDetails.bankName}</span></div>
                       </div>
                     ) : (
                       <span className="text-muted-foreground">-</span>
@@ -420,15 +436,16 @@ const Withdrawals = () => {
           
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between bg-card border border-border p-2 rounded-lg">
-              <span className="text-[10px] text-muted-foreground font-medium">
-                Showing {results.items.length} of {results.total} results • Page {page} of {totalPages}
-              </span>
+            <div className="flex items-center justify-end bg-card border border-border p-2 rounded-lg gap-4">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">Total {results.total}</span>
+              </div>
+              
               <div className="flex items-center gap-1">
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
-                  className="h-7 w-7 p-0"
+                  className="h-8 w-8 p-0"
                   disabled={page <= 1 || loading}
                   onClick={() => {
                     const nextPage = page - 1;
@@ -438,13 +455,46 @@ const Withdrawals = () => {
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                <div className="text-xs font-medium px-2 h-7 flex items-center bg-secondary/50 rounded">
-                  {page}
+                
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (page <= 3) {
+                      pageNum = i + 1;
+                    } else if (page >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = page - 2 + i;
+                    }
+                    
+                    return (
+                      <Button
+                        key={pageNum}
+                        variant={page === pageNum ? "secondary" : "ghost"}
+                        size="sm"
+                        className={cn(
+                          "h-8 w-8 p-0 text-xs font-medium",
+                          page === pageNum ? "text-primary" : "text-foreground"
+                        )}
+                        onClick={() => {
+                          if (page !== pageNum) {
+                            if (lastSearchType === 'user') loadByUserId(pageNum);
+                            else if (lastSearchType === 'global') loadGlobalSearch(pageNum);
+                          }
+                        }}
+                      >
+                        {pageNum}
+                      </Button>
+                    );
+                  })}
                 </div>
+
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
-                  className="h-7 w-7 p-0"
+                  className="h-8 w-8 p-0"
                   disabled={page >= totalPages || loading}
                   onClick={() => {
                     const nextPage = page + 1;
@@ -454,6 +504,17 @@ const Withdrawals = () => {
                 >
                   <ChevronRight className="h-4 w-4" />
                 </Button>
+              </div>
+
+              <div className="flex items-center gap-2 border-l border-border pl-4">
+                <span className="text-xs text-muted-foreground">Go to</span>
+                <input
+                  type="text"
+                  value={pageInput}
+                  onChange={(e) => setPageInput(e.target.value)}
+                  onKeyDown={handlePageGo}
+                  className="w-12 h-8 rounded border border-input bg-background px-2 py-1 text-xs text-center focus:outline-none focus:ring-1 focus:ring-primary"
+                />
               </div>
             </div>
           )}
