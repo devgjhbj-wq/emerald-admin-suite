@@ -184,11 +184,11 @@ const Withdrawals = () => {
                 <th className="text-left p-2 text-muted-foreground font-medium">User ID</th>
                 <th className="text-left p-2 text-muted-foreground font-medium">Order ID</th>
                 <th className="text-left p-2 text-muted-foreground font-medium">Amount</th>
-                <th className="text-left p-2 text-muted-foreground font-medium">Bal. After</th>
                 <th className="text-left p-2 text-muted-foreground font-medium">Bank Details</th>
                 <th className="text-left p-2 text-muted-foreground font-medium">Status</th>
                 <th className="text-left p-2 text-muted-foreground font-medium">Remark</th>
-                <th className="text-left p-2 text-muted-foreground font-medium">Date</th>
+                <th className="text-left p-2 text-muted-foreground font-medium whitespace-nowrap">Created At</th>
+                <th className="text-left p-2 text-muted-foreground font-medium whitespace-nowrap">Updated At</th>
                 <th className="text-left p-2 text-muted-foreground font-medium">Action</th>
               </tr>
             </thead>
@@ -198,14 +198,13 @@ const Withdrawals = () => {
                   <td className="p-2 text-foreground font-medium">{d.userId}</td>
                   <td className="p-2 text-foreground font-mono text-[10px]">{d.orderId}</td>
                   <td className="p-2 text-foreground">₹{d.amount?.toLocaleString()}</td>
-                  <td className="p-2 text-foreground text-xs">{d.balanceAfter !== undefined ? `₹${d.balanceAfter.toLocaleString()}` : '-'}</td>
                   <td className="p-2 text-[10px]">
                     {d.bankDetails ? (
-                      <div className="flex flex-col gap-1 w-max">
-                        <div><span className="text-muted-foreground inline-block w-10">Holder:</span> <span className="font-medium text-foreground">{d.bankDetails.accountHolder}</span></div>
-                        <div><span className="text-muted-foreground inline-block w-10">Bank:</span> <span className="text-foreground">{d.bankDetails.bankName}</span></div>
-                        <div><span className="text-muted-foreground inline-block w-10">A/C:</span> <span className="text-foreground font-mono">{d.bankDetails.accountNumber}</span></div>
-                        {d.bankDetails.bankCode && <div><span className="text-muted-foreground inline-block w-10">IFSC:</span> <span className="text-foreground font-mono">{d.bankDetails.bankCode}</span></div>}
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-1 w-max">
+                        <div className="flex gap-1.5"><span className="text-muted-foreground font-medium w-7">A/C:</span><span className="text-foreground font-mono">{d.bankDetails.accountNumber}</span></div>
+                        <div className="flex gap-1.5"><span className="text-muted-foreground font-medium w-7">IFSC:</span><span className="text-foreground font-mono">{d.bankDetails.ifsc || d.bankDetails.bankCode || '-'}</span></div>
+                        <div className="flex gap-1.5"><span className="text-muted-foreground font-medium w-7">Name:</span><span className="text-foreground">{d.bankDetails.accountHolder}</span></div>
+                        <div className="flex gap-1.5"><span className="text-muted-foreground font-medium w-7">Bank:</span><span className="text-foreground truncate max-w-[120px]" title={d.bankDetails.bankName}>{d.bankDetails.bankName}</span></div>
                       </div>
                     ) : (
                       <span className="text-muted-foreground">-</span>
@@ -216,8 +215,11 @@ const Withdrawals = () => {
                       {d.status}
                     </span>
                   </td>
-                  <td className="p-2 text-muted-foreground text-[10px] max-w-[150px] truncate" title={d.remark}>{d.remark || '-'}</td>
-                  <td className="p-2 text-muted-foreground">{new Date(d.createdAt).toLocaleString()}</td>
+                  <td className="p-2 text-muted-foreground text-[10px] max-w-[120px] truncate" title={d.remark}>{d.remark || '-'}</td>
+                  <td className="p-2 text-muted-foreground text-[10px] whitespace-nowrap">{new Date(d.createdAt).toLocaleString()}</td>
+                  <td className="p-2 text-muted-foreground text-[10px] whitespace-nowrap">
+                    {d.updatedAt ? new Date(d.updatedAt).toLocaleString() : '—'}
+                  </td>
                   <td className="p-2">
                     {d.status === 'PENDING' ? (
                       <Button

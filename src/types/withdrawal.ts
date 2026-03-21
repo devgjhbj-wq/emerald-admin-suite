@@ -15,6 +15,7 @@ export interface WithdrawalItem {
   status: 'PENDING' | 'AUDITING' | 'SUCCESS' | 'FAILED' | 'CANCELLED';
   remark?: string;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface WithdrawalResponse {
