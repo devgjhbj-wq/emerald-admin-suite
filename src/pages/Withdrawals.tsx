@@ -35,7 +35,7 @@ const Withdrawals = () => {
   const [results, setResults] = useState<WithdrawalResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
-  const [lastSearchType, setLastSearchType] = useState<'user' | 'order' | 'filters'>('filters');
+  const [lastSearchType, setLastSearchType] = useState<'user' | 'order' | 'global'>('global');
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
   const [approvingId, setApprovingId] = useState<string | null>(null);
 
@@ -120,10 +120,14 @@ const Withdrawals = () => {
     }
   }, [token, orderId]);
 
-  const loadByFilters = useCallback(async (p = 1) => {
+  const loadGlobalSearch = useCallback(async (p = 1) => {
+    if (!dateFrom || !dateTo) {
+      toast.error('Please select both From and To dates for Global Search');
+      return;
+    }
     setLoading(true);
     setAuthToken(token);
-    setLastSearchType('filters');
+    setLastSearchType('global');
     try {
       const filters: WithdrawalFilters = {
         page: p,
@@ -138,7 +142,7 @@ const Withdrawals = () => {
       setPage(p);
       setUpdatedAt(new Date());
     } catch (err: any) {
-      toast.error(err.response?.data?.msg || 'Failed to fetch withdrawals');
+      toast.error(err.response?.data?.msg || 'Failed to perform Global Search');
     } finally {
       setLoading(false);
     }
@@ -147,7 +151,7 @@ const Withdrawals = () => {
   const handleRefresh = () => {
     if (lastSearchType === 'user') loadByUserId(page);
     else if (lastSearchType === 'order') loadByOrderId();
-    else loadByFilters(page);
+    else loadGlobalSearch(page);
   };
 
   const handleClear = () => {
@@ -379,13 +383,13 @@ const Withdrawals = () => {
 
           <div className="flex items-center gap-2">
             <Button 
-              onClick={() => loadByFilters(1)} 
+              onClick={() => loadGlobalSearch(1)} 
               disabled={loading} 
               size="sm"
               className="h-7 px-4 text-xs font-semibold"
             >
-              {loading && lastSearchType === 'filters' ? <Loading size={12} className="mr-1" /> : null}
-              Search Filters
+              {loading && lastSearchType === 'global' ? <Loading size={12} className="mr-1" /> : null}
+              Global Search
             </Button>
             <Button 
               onClick={handleClear} 
@@ -427,7 +431,7 @@ const Withdrawals = () => {
                   onClick={() => {
                     const nextPage = page - 1;
                     if (lastSearchType === 'user') loadByUserId(nextPage);
-                    else if (lastSearchType === 'filters') loadByFilters(nextPage);
+                    else if (lastSearchType === 'global') loadGlobalSearch(nextPage);
                   }}
                 >
                   <ChevronLeft className="h-4 w-4" />
@@ -443,7 +447,7 @@ const Withdrawals = () => {
                   onClick={() => {
                     const nextPage = page + 1;
                     if (lastSearchType === 'user') loadByUserId(nextPage);
-                    else if (lastSearchType === 'filters') loadByFilters(nextPage);
+                    else if (lastSearchType === 'global') loadGlobalSearch(nextPage);
                   }}
                 >
                   <ChevronRight className="h-4 w-4" />
