@@ -288,7 +288,7 @@ GET /admin/deposits?orderId=ODR1234567890123456
       "status": "PENDING",
       "gatewayOrderNo": "gw123456",
       "paymentLinks": {},
-      "channelName": "Paysimply",
+      "channelName": "SimplyPay",
       "note": "Deposit request",
       "createdAt": "2026-03-19T10:30:00.000Z",
       "updatedAt": "2026-03-19T10:30:00.000Z"
@@ -296,6 +296,13 @@ GET /admin/deposits?orderId=ODR1234567890123456
   ]
 }
 ```
+
+**Available Channels:**
+| Channel | Description |
+|---------|-------------|
+| SimplyPay | Default channel |
+| FPay | Alternative channel |
+| UPay | UPay gateway channel |
 
 **Deposit Status Values:**
 
@@ -445,7 +452,6 @@ GET /admin/withdrawals?orderId=WD1234567890123456
       },
       "channelName": "SimplyPay",
       "note": "Withdrawal request",
-      "callbackData": null,
       "createdAt": "2026-03-19T10:30:00.000Z",
       "updatedAt": "2026-03-19T10:30:00.000Z"
     }
@@ -453,12 +459,18 @@ GET /admin/withdrawals?orderId=WD1234567890123456
 }
 ```
 
+**Available Payout Channels:**
+| Channel | Description |
+|---------|-------------|
+| SimplyPay | Default payout via SimplyPay API (uses IFSC + account) |
+| UPay | Payout via UPay API (uses account number as address) |
+
 **Withdrawal Status Values:**
 
 | Status | Description |
 |--------|-------------|
 | PENDING | Withdrawal requested, awaiting admin approval |
-| AUDITING | Admin approved, SimplyPay payout order created |
+| AUDITING | Admin approved, payout order created with gateway (SimplyPay/UPay) |
 | SUCCESS | Payout completed successfully |
 | FAILED | Payout failed (user refunded automatically) |
 | CANCELLED | Payout cancelled/refunded |
@@ -477,7 +489,12 @@ POST /admin/withdrawals/approve
 }
 ```
 
-**Response:**
+**How it works:**
+The approval automatically routes to the correct payout gateway based on the withdrawal order's `channelName`:
+- `SimplyPay` → Uses SimplyPay payout API (requires IFSC + bank account)
+- `UPay` → Uses UPay payout API (uses account number as address)
+
+**Response (SimplyPay):**
 
 ```json
 {
@@ -487,6 +504,20 @@ POST /admin/withdrawals/approve
   "userId": 123456,
   "amount": 500.0,
   "gatewayOrderNo": "dc07e03f03b94e8a9f29702863d35fd5",
+  "status": "AUDITING"
+}
+```
+
+**Response (UPay):**
+
+```json
+{
+  "status": "success",
+  "msg": "Withdrawal approved and payout order created",
+  "orderId": "WD1234567890123456",
+  "userId": 123456,
+  "amount": 500.0,
+  "gatewayOrderNo": "UPAY_ORDER_CODE",
   "status": "AUDITING"
 }
 ```

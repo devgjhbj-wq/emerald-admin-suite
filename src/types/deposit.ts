@@ -5,7 +5,7 @@ export interface DepositItem {
   amount: number;
   status: 'PENDING' | 'SUCCESS' | 'FAILED' | 'REFUNDED' | 'EXPIRED';
   channelName: string;
-  gatewayOrderNo: string;
+  gatewayOrderNo?: string;
   note?: string;
   createdAt: string;
   updatedAt?: string;

@@ -14,6 +14,8 @@ export interface WithdrawalItem {
   balanceAfter?: number;
   bankDetails?: BankDetails;
   status: 'PENDING' | 'AUDITING' | 'SUCCESS' | 'FAILED' | 'CANCELLED';
+  channelName: string;
+  gatewayOrderNo?: string;
   remark?: string;
   createdAt: string;
   updatedAt?: string;

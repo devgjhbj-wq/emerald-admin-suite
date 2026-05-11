@@ -208,6 +208,8 @@ const Withdrawals = () => {
                 <th className="text-left p-2 text-muted-foreground font-medium">Amount</th>
                 <th className="text-left p-2 text-muted-foreground font-medium">Charge</th>
                 <th className="text-left p-2 text-muted-foreground font-medium">Bank Details</th>
+                <th className="text-left p-2 text-muted-foreground font-medium">Channel</th>
+                <th className="text-left p-2 text-muted-foreground font-medium">Gateway Order No</th>
                 <th className="text-left p-2 text-muted-foreground font-medium">Status</th>
                 <th className="text-left p-2 text-muted-foreground font-medium">Remark</th>
                 <th className="text-left p-2 text-muted-foreground font-medium whitespace-nowrap">Created At</th>
@@ -236,6 +238,8 @@ const Withdrawals = () => {
                       <span className="text-muted-foreground">-</span>
                     )}
                   </td>
+                  <td className="p-2 text-muted-foreground">{d.channelName}</td>
+                  <td className="p-2 text-muted-foreground font-mono text-[10px]">{d.gatewayOrderNo || '-'}</td>
                   <td className="p-2">
                     <span className={`px-1.5 py-0.5 text-[10px] font-medium rounded-sm ${statusColor[d.status] || 'bg-muted text-muted-foreground'}`}>
                       {d.status}
