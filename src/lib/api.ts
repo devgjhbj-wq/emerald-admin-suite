@@ -140,12 +140,13 @@ export const fetchWithdrawalByOrder = (orderId: string) => {
 /**
  * Approve a withdrawal order
  * @param orderId The withdrawal order ID to approve
+ * @param chargeFrom Who bears the charge — "user" or "platform"
  */
-export const approveWithdrawal = (orderId: string) => {
+export const approveWithdrawal = (orderId: string, chargeFrom: 'user' | 'platform' = 'user') => {
   if (!orderId || orderId.trim().length === 0) {
     return Promise.reject(new Error('Order ID is required'));
   }
-  return api.post('/api/admin/withdrawals/approve', { orderId });
+  return api.post('/api/admin/withdrawals/approve', { orderId, chargeFrom });
 };
 
 /**
@@ -159,6 +160,18 @@ export const cancelWithdrawal = (orderId: string, note?: string) => {
   }
   return api.post('/api/admin/withdrawals/cancel', { orderId, note });
 };
+
+/**
+ * Fetch withdrawal configuration
+ */
+export const fetchWithdrawalConfig = () => api.get('/api/admin/withdrawal-config');
+
+/**
+ * Update withdrawal configuration (partial update)
+ * @param data Fields to update: perDayLimit, limits
+ */
+export const updateWithdrawalConfig = (data: { perDayLimit?: number; limits?: Record<string, { min?: number; max?: number }> }) =>
+  api.put('/api/admin/withdrawal-config', data);
 
 // Agent Stats
 export const fetchAgentStats = (userId: string, page = 1, limit = 50) =>

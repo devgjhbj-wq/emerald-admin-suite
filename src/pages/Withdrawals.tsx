@@ -28,6 +28,7 @@ const Withdrawals = () => {
   const [userId, setUserId] = useState('');
   const [orderId, setOrderId] = useState('');
   const [status, setStatus] = useState('');
+  const [chargeFrom, setChargeFrom] = useState<'user' | 'platform'>('user');
   const [dateFrom, setDateFrom] = useState<Date>();
   const [dateTo, setDateTo] = useState<Date>();
   
@@ -45,7 +46,7 @@ const Withdrawals = () => {
     setAuthToken(token);
     setApprovingId(orderIdToApprove);
     try {
-      const res = await approveWithdrawal(orderIdToApprove);
+      const res = await approveWithdrawal(orderIdToApprove, chargeFrom);
       toast.success(res.data.msg || 'Withdrawal approved');
       if (results?.items) {
         const updatedItems = results.items.map((d) => 
@@ -416,6 +417,17 @@ const Withdrawals = () => {
               <option value="SUCCESS">SUCCESS</option>
               <option value="FAILED">FAILED</option>
               <option value="CANCELLED">CANCELLED</option>
+            </select>
+          </div>
+          <div className="w-[110px]">
+            <label className="text-[10px] font-medium text-muted-foreground uppercase mb-1 block">Charge From</label>
+            <select
+              className="flex h-6 w-full rounded border border-input bg-background px-2 py-0.5 text-[11px] shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              value={chargeFrom}
+              onChange={(e) => setChargeFrom(e.target.value as 'user' | 'platform')}
+            >
+              <option value="user">User</option>
+              <option value="platform">Platform</option>
             </select>
           </div>
 
