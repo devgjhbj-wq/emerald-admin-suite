@@ -1,12 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { fetchWithdrawals, fetchWithdrawalByOrder, approveWithdrawal, setAuthToken } from '@/lib/api';
+import { fetchWithdrawals, fetchWithdrawalByOrder, approveWithdrawal, cancelWithdrawal, setAuthToken } from '@/lib/api';
 import { toast } from 'sonner';
 import SearchBar from '@/components/SearchBar';
 import LastUpdated from '@/components/LastUpdated';
 import Loading from '@/components/Loading';
 import { Button } from '@/components/ui/button';
-import { CalendarIcon, ChevronLeft, ChevronRight, CheckCircle, Info } from 'lucide-react';
+import { CalendarIcon, ChevronLeft, ChevronRight, CheckCircle, XCircle, Info } from 'lucide-react';
 import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -39,6 +39,7 @@ const Withdrawals = () => {
   const [lastSearchType, setLastSearchType] = useState<'user' | 'order' | 'global'>('global');
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
   const [approvingId, setApprovingId] = useState<string | null>(null);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
 
   const handleApprove = async (orderIdToApprove: string) => {
     setAuthToken(token);
@@ -53,10 +54,31 @@ const Withdrawals = () => {
         setResults({ ...results, items: updatedItems });
       }
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { msg?: string } }; message?: string };
-      toast.error(error.response?.data?.msg || error.message || 'Failed to approve withdrawal');
+      const error = err as { response?: { data?: { msg?: string; gatewayError?: string } }; message?: string };
+      toast.error(error.response?.data?.gatewayError || error.response?.data?.msg || error.message || 'Failed to approve withdrawal');
     } finally {
       setApprovingId(null);
+    }
+  };
+
+  const handleCancel = async (item: WithdrawalItem) => {
+    if (!window.confirm(`Cancel withdrawal ${item.orderId} for ₹${item.amount?.toLocaleString()}?`)) return;
+    setAuthToken(token);
+    setCancellingId(item.orderId);
+    try {
+      const res = await cancelWithdrawal(item.orderId);
+      toast.success(res.data.msg || 'Withdrawal cancelled');
+      if (results?.items) {
+        const updatedItems = results.items.map((d) =>
+          d.orderId === item.orderId ? { ...d, status: 'CANCELLED' as const } : d
+        );
+        setResults({ ...results, items: updatedItems });
+      }
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { msg?: string } }; message?: string };
+      toast.error(error.response?.data?.msg || error.message || 'Failed to cancel withdrawal');
+    } finally {
+      setCancellingId(null);
     }
   };
 
@@ -275,24 +297,41 @@ const Withdrawals = () => {
                     {d.updatedAt ? new Date(d.updatedAt).toLocaleString() : '—'}
                   </td>
                   <td className="p-2">
-                    {d.status === 'PENDING' ? (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="text-primary border-primary/30 hover:bg-primary/10"
-                        disabled={approvingId === d.orderId}
-                        onClick={() => handleApprove(d.orderId)}
-                      >
-                        {approvingId === d.orderId ? (
-                          <Loading size={14} />
-                        ) : (
-                          <CheckCircle className="w-3.5 h-3.5 mr-1" />
-                        )}
-                        Approve
-                      </Button>
-                    ) : (
-                      <span className="text-[10px] text-muted-foreground">—</span>
-                    )}
+                    <div className="flex gap-1">
+                      {d.status === 'PENDING' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-primary border-primary/30 hover:bg-primary/10"
+                          disabled={!!approvingId || !!cancellingId}
+                          onClick={() => handleApprove(d.orderId)}
+                        >
+                          {approvingId === d.orderId ? (
+                            <Loading size={14} />
+                          ) : (
+                            <CheckCircle className="w-3.5 h-3.5" />
+                          )}
+                        </Button>
+                      )}
+                      {(d.status === 'PENDING' || d.status === 'AUDITING') && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-destructive border-destructive/30 hover:bg-destructive/10"
+                          disabled={!!approvingId || !!cancellingId}
+                          onClick={() => handleCancel(d)}
+                        >
+                          {cancellingId === d.orderId ? (
+                            <Loading size={14} />
+                          ) : (
+                            <XCircle className="w-3.5 h-3.5" />
+                          )}
+                        </Button>
+                      )}
+                      {d.status !== 'PENDING' && d.status !== 'AUDITING' && (
+                        <span className="text-[10px] text-muted-foreground">—</span>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}

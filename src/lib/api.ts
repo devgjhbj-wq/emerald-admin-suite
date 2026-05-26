@@ -148,6 +148,18 @@ export const approveWithdrawal = (orderId: string) => {
   return api.post('/api/admin/withdrawals/approve', { orderId });
 };
 
+/**
+ * Cancel a withdrawal order (PENDING or AUDITING) and refund to wallet
+ * @param orderId The withdrawal order ID to cancel
+ * @param note Optional cancellation reason
+ */
+export const cancelWithdrawal = (orderId: string, note?: string) => {
+  if (!orderId || orderId.trim().length === 0) {
+    return Promise.reject(new Error('Order ID is required'));
+  }
+  return api.post('/api/admin/withdrawals/cancel', { orderId, note });
+};
+
 // Agent Stats
 export const fetchAgentStats = (userId: string, page = 1, limit = 50) =>
   api.get(`/api/admin/agent-stats?userId=${userId}&page=${page}&limit=${limit}`);

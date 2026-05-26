@@ -27,6 +27,7 @@ export interface WithdrawalItem {
   paymentDetails?: PaymentDetails;
   currency?: string;
   note?: string;
+  gatewayResponse?: any;
   status: 'PENDING' | 'AUDITING' | 'SUCCESS' | 'FAILED' | 'CANCELLED';
   channelName: string;
   gatewayOrderNo?: string;
