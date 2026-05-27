@@ -14,14 +14,6 @@ import Loading from '@/components/Loading';
 import LastUpdated from '@/components/LastUpdated';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
 import {
   Dialog,
   DialogContent,
@@ -53,6 +45,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { PageContainer, SearchHeader, Pagination } from '@/components/PageContainer';
 
 interface GiftCode {
   _id: string;
@@ -245,38 +238,141 @@ const GiftCodes = () => {
   const totalPages = Math.ceil(total / limit);
   const redemptionTotalPages = Math.ceil(redemptionTotal / 10);
 
-  return (
-    <div className="space-y-4">
-      {/* Header & Controls */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-card border border-border p-3 rounded-lg shadow-sm">
-        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search code..."
-              className="pl-9 h-9 text-xs"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && loadCodes(1)}
-            />
-          </div>
-          <select
-            className="h-9 rounded-md border border-input bg-background px-3 py-1 text-xs shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-            value={isActiveFilter}
-            onChange={(e) => setIsActiveFilter(e.target.value)}
-          >
-            <option value="all">All Status</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-          </select>
-          <Button size="sm" onClick={() => loadCodes(1)} disabled={loading} className="h-9 px-4">
-            {loading ? <Loading size={14} /> : 'Search'}
-          </Button>
-        </div>
+  const renderTable = () => {
+    const showEmpty = codes.length === 0 && !loading;
 
-        <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
-          <LastUpdated timestamp={updatedAt} onRefresh={() => loadCodes(page)} loading={loading} compact />
-          <Dialog open={isCreateOpen} onOpenChange={(open) => {
+    return (
+      <div className="relative rounded" style={{ height: 445, border: '1px solid hsl(var(--border))' }}>
+        {loading && codes.length === 0 && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/60">
+            <Loading size={30} />
+          </div>
+        )}
+
+        <div style={{ height: '100%', overflowX: 'auto', overflowY: 'auto' }}>
+          <table className="el-table w-full" style={{ tableLayout: 'fixed', borderCollapse: 'collapse', minWidth: 1050 }}>
+            <colgroup>
+              <col />
+              <col style={{ width: 80 }} />
+              <col />
+              <col />
+              <col />
+              <col />
+              <col style={{ width: 90 }} />
+              <col />
+              <col style={{ width: 100 }} />
+            </colgroup>
+            <thead style={{ position: 'sticky', top: 0, zIndex: 2, backgroundColor: 'hsl(var(--card))' }}>
+              <tr style={{ height: 50 }}>
+                {['Code', 'Type', 'Amount / Min', 'Max', 'Used / Total', 'Expires', 'Status', 'Created', 'Actions'].map((label) => (
+                  <th key={label} style={{ textAlign: 'center', border: '1px solid hsl(var(--border))', padding: '2px 0', fontWeight: 400, fontSize: 14 }}>
+                    <div className="cell">{label}</div>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {showEmpty ? (
+                <tr>
+                  <td colSpan={9} style={{ textAlign: 'center', border: '1px solid hsl(var(--border))', padding: 50, color: 'hsl(var(--muted-foreground))' }}>
+                    <div className="flex flex-col items-center gap-2">
+                      <svg className="w-12 h-12 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" /></svg>
+                      <span>No Data</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                codes.map((code: any) => (
+                  <tr key={code._id || code.id} style={{ height: 50 }}>
+                    <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                      <div className="cell" style={{ fontFamily: 'monospace', fontSize: 11 }}>{code.code}</div>
+                    </td>
+                    <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                      <div className="cell">
+                        <span className={`px-1.5 py-0.5 text-[10px] font-medium rounded-sm ${
+                          code.type === 'BONUS' ? 'bg-green-500/20 text-green-400' : 'bg-blue-500/20 text-blue-400'
+                        }`}>{code.type}</span>
+                      </div>
+                    </td>
+                    <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                      <div className="cell">{code.amount ? `₹${Number(code.amount).toLocaleString()}` : '-'} / {code.minAmount ? `₹${Number(code.minAmount).toLocaleString()}` : '-'}</div>
+                    </td>
+                    <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                      <div className="cell">{code.maxAmount ? `₹${Number(code.maxAmount).toLocaleString()}` : '-'}</div>
+                    </td>
+                    <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                      <div className="cell">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'center' }}>
+                          <span>{code.usedCount || 0}/{code.totalCount || 0}</span>
+                          <div style={{ width: 60, height: 4, background: 'hsl(var(--secondary))', borderRadius: 2, overflow: 'hidden' }}>
+                            <div style={{ width: `${Math.min(((code.usedCount || 0) / (code.totalCount || 1)) * 100, 100)}%`, height: '100%', background: 'hsl(var(--primary))', borderRadius: 2 }} />
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                      <div className="cell" style={{ fontSize: 11 }}>{code.expiresAt ? new Date(code.expiresAt).toLocaleDateString() : '-'}</div>
+                    </td>
+                    <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                      <div className="cell">
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                          code.active ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'
+                        }`}>{code.active ? 'Active' : 'Inactive'}</span>
+                      </div>
+                    </td>
+                    <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                      <div className="cell" style={{ fontSize: 11 }}>{code.createdAt ? new Date(code.createdAt).toLocaleDateString() : '-'}</div>
+                    </td>
+                    <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                      <div className="cell">
+                        <div style={{ display: 'flex', gap: 4, justifyContent: 'center' }}>
+                          <button onClick={() => handleToggle(code._id || code.id, code.active)} style={{ background: 'none', border: '1px solid hsl(var(--border))', borderRadius: 2, padding: '2px 4px', cursor: 'pointer', color: code.active ? 'hsl(var(--destructive))' : 'hsl(var(--primary))', fontSize: 11, lineHeight: 1 }}>
+                            {code.active ? 'Off' : 'On'}
+                          </button>
+                          <button onClick={() => handleDelete(code._id || code.id)} style={{ background: 'none', border: '1px solid hsl(var(--border))', borderRadius: 2, padding: '2px 4px', cursor: 'pointer', color: 'hsl(var(--destructive))', fontSize: 11, lineHeight: 1 }}>
+                            Del
+                          </button>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <PageContainer>
+      <SearchHeader>
+        <div className="relative">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search code..."
+            className="w-[200px] pl-9 h-[26px] text-xs"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && loadCodes(1)}
+          />
+        </div>
+        <select
+          className="w-[200px] h-[26px] rounded-md border border-input bg-background px-2.5 text-xs shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          value={isActiveFilter}
+          onChange={(e) => setIsActiveFilter(e.target.value)}
+        >
+          <option value="all">All Status</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+        <Button size="sm" onClick={() => loadCodes(1)} disabled={loading} className="h-[26px] px-2.5 rounded-[5px] gap-1 text-xs" style={{ backgroundColor: 'rgb(32,143,255)', color: '#fff' }}>
+          {loading ? <Loading size={12} /> : <Search className="w-3.5 h-3.5" />}
+          Search
+        </Button>
+        <LastUpdated timestamp={updatedAt} onRefresh={() => loadCodes(page)} loading={loading} compact />
+        <Dialog open={isCreateOpen} onOpenChange={(open) => {
             setIsCreateOpen(open);
             if (!open) {
               setIsEditMode(false);
@@ -296,8 +392,8 @@ const GiftCodes = () => {
             }
           }}>
             <DialogTrigger asChild>
-              <Button size="sm" className="h-9 gap-1.5 font-bold">
-                <Plus className="w-4 h-4" />
+              <Button size="sm" className="h-[26px] rounded-[5px] gap-1 text-xs font-bold">
+                <Plus className="w-3.5 h-3.5" />
                 Create Gift Code
               </Button>
             </DialogTrigger>
@@ -426,168 +522,11 @@ const GiftCodes = () => {
               </form>
             </DialogContent>
           </Dialog>
-        </div>
-      </div>
+      </SearchHeader>
 
-      {/* Codes Table */}
-      <div className="bg-card border border-border rounded-lg shadow-sm overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-secondary/30">
-              <TableHead className="text-[10px] font-bold uppercase py-2">Code</TableHead>
-              <TableHead className="text-[10px] font-bold uppercase py-2">Reward</TableHead>
-              <TableHead className="text-[10px] font-bold uppercase py-2">Usage</TableHead>
-              <TableHead className="text-[10px] font-bold uppercase py-2">Turnover</TableHead>
-              <TableHead className="text-[10px] font-bold uppercase py-2">Requirements</TableHead>
-              <TableHead className="text-[10px] font-bold uppercase py-2">Expiry</TableHead>
-              <TableHead className="text-[10px] font-bold uppercase py-2">Status</TableHead>
-              <TableHead className="text-[10px] font-bold uppercase py-2 text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading && codes.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={8} className="h-48 text-center"><Loading /></TableCell>
-              </TableRow>
-            ) : codes.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={8} className="h-48 text-center text-muted-foreground text-xs">No gift codes found.</TableCell>
-              </TableRow>
-            ) : (
-              codes.map((code) => (
-                <TableRow key={code._id} className="hover:bg-secondary/10">
-                  <TableCell className="font-mono font-bold text-primary py-3">
-                    {code.code}
-                    {code.description && (
-                      <p className="text-[10px] text-muted-foreground font-normal mt-0.5">{code.description}</p>
-                    )}
-                  </TableCell>
-                  <TableCell className="font-black">₹{code.rewardAmount.toLocaleString()}</TableCell>
-                  <TableCell>
-                    <div className="flex flex-col gap-1">
-                      <div className="flex items-center justify-between text-[10px] w-24">
-                        <span>{code.usedCount} / {code.maxRedemptions}</span>
-                        <span>{Math.round((code.usedCount / code.maxRedemptions) * 100)}%</span>
-                      </div>
-                      <div className="w-24 h-1.5 bg-secondary rounded-full overflow-hidden">
-                        <div 
-                          className={cn(
-                            "h-full transition-all",
-                            (code.usedCount / code.maxRedemptions) > 0.9 ? "bg-red-500" : "bg-primary"
-                          )}
-                          style={{ width: `${Math.min(100, (code.usedCount / code.maxRedemptions) * 100)}%` }}
-                        />
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-[11px]">
-                    <span className="text-muted-foreground">x</span>{code.turnoverMultiplier}
-                    <p className="text-[10px] text-muted-foreground font-medium">Req: ₹{(code.rewardAmount * code.turnoverMultiplier).toLocaleString()}</p>
-                  </TableCell>
-                  <TableCell className="text-[11px]">
-                    {code.minDepositToday > 0 ? (
-                      <span className="bg-blue-500/10 text-blue-500 px-1.5 py-0.5 rounded text-[10px] font-bold">
-                        Dep: ₹{code.minDepositToday}
-                      </span>
-                    ) : (
-                      <span className="text-muted-foreground">None</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-[11px]">
-                    <div className={cn(
-                      "flex items-center gap-1",
-                      new Date(code.expiryDate) < new Date() ? "text-red-500 font-bold" : "text-foreground"
-                    )}>
-                      <CalendarIcon className="w-3 h-3" />
-                      {format(new Date(code.expiryDate), "MMM dd, yyyy")}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <span className={cn(
-                      "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase",
-                      code.isActive ? "bg-green-500/10 text-green-500" : "bg-red-500/10 text-red-500"
-                    )}>
-                      {code.isActive ? 'Active' : 'Inactive'}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 w-7 p-0"
-                        title="Edit Code"
-                        onClick={() => openEdit(code)}
-                      >
-                        <Edit2 className="w-3.5 h-3.5" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 w-7 p-0"
-                        title="View Redemptions"
-                        onClick={() => loadRedemptions(code.code, 1)}
-                      >
-                        <Users className="w-3.5 h-3.5" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className={cn("h-7 w-7 p-0", code.isActive ? "text-red-500" : "text-green-500")}
-                        title={code.isActive ? "Disable" : "Enable"}
-                        onClick={() => handleToggle(code.code, code.isActive)}
-                      >
-                        {code.isActive ? <PowerOff className="w-3.5 h-3.5" /> : <Power className="w-3.5 h-3.5" />}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 w-7 p-0 text-muted-foreground hover:text-red-500"
-                        title="Delete"
-                        onClick={() => handleDelete(code.code)}
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+      {renderTable()}
 
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="p-3 border-t border-border flex items-center justify-between bg-secondary/10">
-            <span className="text-[11px] text-muted-foreground">Total {total} codes</span>
-            <div className="flex items-center gap-1">
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-7 w-7 p-0"
-                disabled={page <= 1 || loading}
-                onClick={() => loadCodes(page - 1)}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <div className="flex items-center gap-1 px-2">
-                <span className="text-[11px] font-bold">{page}</span>
-                <span className="text-[11px] text-muted-foreground">/</span>
-                <span className="text-[11px] text-muted-foreground">{totalPages}</span>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-7 w-7 p-0"
-                disabled={page >= totalPages || loading}
-                onClick={() => loadCodes(page + 1)}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        )}
-      </div>
+      <Pagination page={page} totalPages={totalPages} total={total} loading={loading} onPageChange={loadCodes} />
 
       {/* Redemptions Dialog */}
       <Dialog open={isRedemptionsOpen} onOpenChange={setIsRedemptionsOpen}>
@@ -611,28 +550,28 @@ const GiftCodes = () => {
                 <p className="text-sm">No redemptions yet.</p>
               </div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="text-[10px] uppercase h-8">User ID</TableHead>
-                    <TableHead className="text-[10px] uppercase h-8">Reward</TableHead>
-                    <TableHead className="text-[10px] uppercase h-8">Turnover Added</TableHead>
-                    <TableHead className="text-[10px] uppercase h-8">Date</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
+              <table className="el-table w-full" style={{ borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ height: 40 }}>
+                    <th style={{ textAlign: 'left', borderBottom: '1px solid hsl(var(--border))', padding: '8px 12px', fontWeight: 600, fontSize: 12 }}>User ID</th>
+                    <th style={{ textAlign: 'left', borderBottom: '1px solid hsl(var(--border))', padding: '8px 12px', fontWeight: 600, fontSize: 12 }}>Reward</th>
+                    <th style={{ textAlign: 'left', borderBottom: '1px solid hsl(var(--border))', padding: '8px 12px', fontWeight: 600, fontSize: 12 }}>Turnover Added</th>
+                    <th style={{ textAlign: 'left', borderBottom: '1px solid hsl(var(--border))', padding: '8px 12px', fontWeight: 600, fontSize: 12 }}>Date</th>
+                  </tr>
+                </thead>
+                <tbody>
                   {redemptions.map((r) => (
-                    <TableRow key={r._id}>
-                      <TableCell className="font-bold py-2">{r.userId}</TableCell>
-                      <TableCell className="font-black py-2">₹{r.rewardAmount.toLocaleString()}</TableCell>
-                      <TableCell className="text-muted-foreground py-2">₹{r.turnoverAdded.toLocaleString()}</TableCell>
-                      <TableCell className="text-[10px] text-muted-foreground py-2">
+                    <tr key={r._id}>
+                      <td style={{ padding: '8px 12px', fontSize: 13, fontWeight: 700 }}>{r.userId}</td>
+                      <td style={{ padding: '8px 12px', fontSize: 13, fontWeight: 900 }}>₹{r.rewardAmount.toLocaleString()}</td>
+                      <td style={{ padding: '8px 12px', fontSize: 13, color: 'hsl(var(--muted-foreground))' }}>₹{r.turnoverAdded.toLocaleString()}</td>
+                      <td style={{ padding: '8px 12px', fontSize: 10, color: 'hsl(var(--muted-foreground))' }}>
                         {format(new Date(r.createdAt), "MMM dd, yyyy HH:mm")}
-                      </TableCell>
-                    </TableRow>
+                      </td>
+                    </tr>
                   ))}
-                </TableBody>
-              </Table>
+                </tbody>
+              </table>
             )}
           </div>
 
@@ -664,7 +603,7 @@ const GiftCodes = () => {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </PageContainer>
   );
 };
 

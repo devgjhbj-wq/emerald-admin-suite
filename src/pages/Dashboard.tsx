@@ -10,6 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { PageContainer, SearchHeader } from '@/components/PageContainer';
 
 interface DashboardStats {
   status: string;
@@ -78,9 +79,11 @@ const Dashboard = () => {
 
   if (loading && !stats) {
     return (
-      <div className="flex items-center justify-center h-48">
-        <Loading />
-      </div>
+      <PageContainer>
+        <div className="flex items-center justify-center h-48">
+          <Loading />
+        </div>
+      </PageContainer>
     );
   }
 
@@ -103,93 +106,85 @@ const Dashboard = () => {
   ];
 
   return (
-    <div className="space-y-4">
-      {/* Controls */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-card border border-border p-3 rounded-lg shadow-sm">
-        <div className="flex items-center gap-2">
-          <div className="flex bg-secondary/30 p-1 rounded-md border border-border">
-            <button
-              onClick={() => setPeriod('today')}
-              className={cn(
-                "px-3 py-1 text-xs font-medium rounded transition-colors",
-                period === 'today' ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              Today
-            </button>
-            <button
-              onClick={() => setPeriod('month')}
-              className={cn(
-                "px-3 py-1 text-xs font-medium rounded transition-colors",
-                period === 'month' ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              This Month
-            </button>
-            <button
-              onClick={() => setPeriod('custom')}
-              className={cn(
-                "px-3 py-1 text-xs font-medium rounded transition-colors",
-                period === 'custom' ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              By Date
-            </button>
-          </div>
-
-          {period === 'custom' && (
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className={cn(
-                    "h-8 text-[11px] font-normal px-3",
-                    !selectedDate && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-3.5 w-3.5" />
-                  {selectedDate ? format(selectedDate, "PPP") : <span>Pick a date</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={setSelectedDate}
-                  initialFocus
-                  captionLayout="dropdown-buttons"
-                  fromYear={2024}
-                  toYear={2026}
-                />
-              </PopoverContent>
-            </Popover>
-          )}
-
-          <Button 
-            onClick={handleSearch} 
-            disabled={loading}
-            size="sm" 
-            className="h-8 text-xs gap-1.5"
+    <PageContainer>
+      <SearchHeader>
+        <div className="flex bg-secondary/30 p-1 rounded-md border border-border">
+          <button
+            onClick={() => setPeriod('today')}
+            className={cn(
+              "px-3 py-1 text-xs font-medium rounded transition-colors",
+              period === 'today' ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+            )}
           >
-            <Search className="w-3.5 h-3.5" />
-            Search
-          </Button>
+            Today
+          </button>
+          <button
+            onClick={() => setPeriod('month')}
+            className={cn(
+              "px-3 py-1 text-xs font-medium rounded transition-colors",
+              period === 'month' ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            This Month
+          </button>
+          <button
+            onClick={() => setPeriod('custom')}
+            className={cn(
+              "px-3 py-1 text-xs font-medium rounded transition-colors",
+              period === 'custom' ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            By Date
+          </button>
         </div>
 
-        <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 pt-2 sm:pt-0 border-border/50">
-          <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-medium uppercase tracking-wider">
-            <Filter className="w-3 h-3" />
-            <span>Mode: {period === 'custom' ? 'Date Filter' : period}</span>
-          </div>
-          <LastUpdated 
-            timestamp={updatedAt} 
-            onRefresh={handleSearch} 
-            loading={loading} 
-            compact 
-          />
-        </div>
-      </div>
+        {period === 'custom' && (
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className={cn(
+                  "h-[26px] rounded-[5px] text-xs font-normal px-2.5",
+                  !selectedDate && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {selectedDate ? format(selectedDate, "PPP") : <span>Pick a date</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={setSelectedDate}
+                initialFocus
+                captionLayout="dropdown-buttons"
+                fromYear={2024}
+                toYear={2026}
+              />
+            </PopoverContent>
+          </Popover>
+        )}
+
+        <Button 
+          onClick={handleSearch} 
+          disabled={loading}
+          size="sm" 
+          className="h-[26px] px-2.5 rounded-[5px] gap-1 text-xs"
+          style={{ backgroundColor: 'rgb(32,143,255)', color: '#fff' }}
+        >
+          <Search className="w-4 h-4" />
+          Search
+        </Button>
+
+        <LastUpdated 
+          timestamp={updatedAt} 
+          onRefresh={handleSearch} 
+          loading={loading} 
+          compact 
+        />
+      </SearchHeader>
 
       {!stats && !loading ? (
         <div className="flex flex-col items-center justify-center h-64 bg-card border border-border rounded-lg shadow-sm space-y-3">
@@ -268,41 +263,71 @@ const Dashboard = () => {
           {stats?.withdrawals?.byStatus && (
             <div className="space-y-2">
               <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider pl-1">Withdrawal Status Breakdown</h3>
-              <div className="bg-card border border-border rounded-lg overflow-hidden shadow-sm">
-                <table className="w-full text-left text-[11px]">
-                  <thead>
-                    <tr className="bg-secondary/30 border-b border-border">
-                      <th className="px-4 py-2 font-bold text-muted-foreground uppercase tracking-wider">Status</th>
-                      <th className="px-4 py-2 font-bold text-muted-foreground uppercase tracking-wider text-right">Count</th>
-                      <th className="px-4 py-2 font-bold text-muted-foreground uppercase tracking-wider text-right">Total Amount</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border/50">
-                    {Object.entries(stats.withdrawals.byStatus).map(([status, data]) => (
-                      <tr key={status} className="hover:bg-secondary/10 transition-colors">
-                        <td className="px-4 py-2.5">
-                          <span className={cn(
-                            "px-2 py-0.5 rounded-full font-bold text-[9px] uppercase",
-                            status === 'SUCCESS' ? "bg-green-500/10 text-green-500 border border-green-500/20" :
-                            status === 'PENDING' ? "bg-yellow-500/10 text-yellow-500 border border-yellow-500/20" :
-                            status === 'AUDITING' ? "bg-blue-500/10 text-blue-500 border border-blue-500/20" :
-                            "bg-red-500/10 text-red-500 border border-red-500/20"
-                          )}>
-                            {status}
-                          </span>
-                        </td>
-                        <td className="px-4 py-2.5 text-right font-medium">{data.count.toLocaleString()}</td>
-                        <td className="px-4 py-2.5 text-right font-black">₹{data.total.toLocaleString()}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              {(() => {
+                const breakdowns = Object.entries(stats.withdrawals.byStatus).map(([status, data]: [string, any]) => ({
+                  _id: status,
+                  status,
+                  count: data.count,
+                  totalAmount: data.total,
+                }));
+                return (
+                  <div className="relative rounded" style={{ border: '1px solid hsl(var(--border))' }}>
+                    <div style={{ overflowX: 'auto' }}>
+                      <table className="el-table w-full" style={{ tableLayout: 'fixed', borderCollapse: 'collapse' }}>
+                        <colgroup>
+                          <col />
+                          <col style={{ width: 120 }} />
+                          <col style={{ width: 150 }} />
+                        </colgroup>
+                        <thead style={{ position: 'sticky', top: 0, zIndex: 2, backgroundColor: 'hsl(var(--card))' }}>
+                          <tr style={{ height: 50 }}>
+                            <th style={{ textAlign: 'center', border: '1px solid hsl(var(--border))', padding: '2px 0', fontWeight: 400, fontSize: 14 }}>
+                              <div className="cell">Status</div>
+                            </th>
+                            <th style={{ textAlign: 'center', border: '1px solid hsl(var(--border))', padding: '2px 0', fontWeight: 400, fontSize: 14 }}>
+                              <div className="cell">Count</div>
+                            </th>
+                            <th style={{ textAlign: 'center', border: '1px solid hsl(var(--border))', padding: '2px 0', fontWeight: 400, fontSize: 14 }}>
+                              <div className="cell">Total Amount</div>
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {breakdowns.length === 0 ? (
+                            <tr>
+                              <td colSpan={3} style={{ textAlign: 'center', border: '1px solid hsl(var(--border))', padding: 30, color: 'hsl(var(--muted-foreground))' }}>
+                                <div className="flex flex-col items-center gap-2">
+                                  <svg className="w-8 h-8 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" /></svg>
+                                  <span>No Data</span>
+                                </div>
+                              </td>
+                            </tr>
+                          ) : (
+                            breakdowns.map((b: any, i: number) => (
+                              <tr key={i} style={{ height: 50 }}>
+                                <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                                  <div className="cell">{b.status || b._id}</div>
+                                </td>
+                                <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                                  <div className="cell">{b.count}</div>
+                                </td>
+                                <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                                  <div className="cell">₹{Number(b.totalAmount || b.amount || 0).toLocaleString()}</div>
+                                </td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           )}
         </>
       )}
-    </div>
+    </PageContainer>
   );
 };
 

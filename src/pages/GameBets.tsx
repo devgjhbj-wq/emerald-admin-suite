@@ -5,9 +5,9 @@ import { toast } from 'sonner';
 import SearchBar from '@/components/SearchBar';
 import Loading from '@/components/Loading';
 import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { RefreshCw, Search } from 'lucide-react';
+import { PageContainer, SearchHeader, Pagination } from '@/components/PageContainer';
 
 const GameBets = () => {
   const { token } = useAuth();
@@ -59,42 +59,120 @@ const GameBets = () => {
     }
   };
 
-  return (
-    <div className="space-y-1.5">
-      <div className="bg-card border border-border p-2 rounded-md flex flex-wrap gap-1.5 items-end">
-        <div className="space-y-1 w-full sm:w-48">
-          <label className="text-xs font-medium text-muted-foreground">Member (Required)</label>
-          <SearchBar 
-            value={member} 
-            onChange={setMember} 
-            onSearch={() => handleSearch(1)} 
-            placeholder="e.g., u123456" 
-            loading={loading}
-            storageKey="game_bets_member_search"
-            maxHistory={10}
-          />
-        </div>
-        <div className="space-y-1 w-full sm:w-32">
-          <label className="text-xs font-medium text-muted-foreground">Site (Optional)</label>
-          <Input value={site} onChange={(e) => setSite(e.target.value)} placeholder="e.g., JE" className="h-9" />
-        </div>
-        <div className="space-y-1 w-full sm:w-36">
-          <label className="text-xs font-medium text-muted-foreground">Date From</label>
-          <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="h-9" />
-        </div>
-        <div className="space-y-1 w-full sm:w-36">
-          <label className="text-xs font-medium text-muted-foreground">Date To</label>
-          <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="h-9" />
-        </div>
-        <div className="flex gap-2">
-          <Button onClick={() => handleSearch(1)} disabled={loading} className="h-9">
-            <Search className="w-4 h-4 mr-2" /> Search
-          </Button>
-          <Button onClick={handleSync} disabled={syncing} variant="secondary" className="h-9">
-            <RefreshCw className={`w-4 h-4 mr-2 ${syncing ? 'animate-spin' : ''}`} /> Sync Bets
-          </Button>
+  const statusColor: Record<string, string> = {
+    win: 'bg-green-500/20 text-green-400',
+    loss: 'bg-red-500/20 text-red-400',
+    refund: 'bg-yellow-500/20 text-yellow-400',
+    pending: 'bg-yellow-500/20 text-yellow-400',
+  };
+
+  const renderTable = (data: any) => {
+    const showEmpty = !data?.items?.length;
+
+    return (
+      <div className="relative rounded" style={{ height: 445, border: '1px solid hsl(var(--border))' }}>
+        {loading && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/60">
+            <Loading size={30} />
+          </div>
+        )}
+
+        <div style={{ height: '100%', overflowX: 'auto', overflowY: 'auto' }}>
+          <table className="el-table w-full" style={{ tableLayout: 'fixed', borderCollapse: 'collapse', minWidth: 1050 }}>
+            <colgroup>
+              <col />
+              <col />
+              <col />
+              <col />
+              <col />
+              <col />
+              <col />
+              <col />
+            </colgroup>
+            <thead style={{ position: 'sticky', top: 0, zIndex: 2, backgroundColor: 'hsl(var(--card))' }}>
+              <tr style={{ height: 50 }}>
+                {['Time', 'Game', 'Member', 'Content', 'Bet Amount', 'Valid Bet', 'Payout', 'Status'].map((label) => (
+                  <th key={label} style={{ textAlign: 'center', border: '1px solid hsl(var(--border))', padding: '2px 0', fontWeight: 400, fontSize: 14 }}>
+                    <div className="cell">{label}</div>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {showEmpty ? (
+                <tr>
+                  <td colSpan={8} style={{ textAlign: 'center', border: '1px solid hsl(var(--border))', padding: 50, color: 'hsl(var(--muted-foreground))' }}>
+                    <div className="flex flex-col items-center gap-2">
+                      <svg className="w-12 h-12 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" /></svg>
+                      <span>No Data</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                data.items.map((d: any, i: number) => (
+                  <tr key={i} style={{ height: 50 }}>
+                    <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                      <div className="cell" style={{ fontSize: 11 }}>{new Date(d.time || d.createdAt).toLocaleString()}</div>
+                    </td>
+                    <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                      <div className="cell">{d.game}</div>
+                    </td>
+                    <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                      <div className="cell">{d.member || d.userId}</div>
+                    </td>
+                    <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                      <div className="cell">{d.content}</div>
+                    </td>
+                    <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                      <div className="cell">{d.betAmount ? `₹${Number(d.betAmount).toLocaleString()}` : '-'}</div>
+                    </td>
+                    <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                      <div className="cell">{d.validBet ? `₹${Number(d.validBet).toLocaleString()}` : '-'}</div>
+                    </td>
+                    <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                      <div className="cell" style={{ color: d.payout > 0 ? 'hsl(var(--primary))' : 'hsl(var(--foreground))' }}>{d.payout ? `₹${Number(d.payout).toLocaleString()}` : '-'}</div>
+                    </td>
+                    <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                      <div className="cell">
+                        <span className={`px-1.5 py-0.5 text-[10px] font-medium rounded-sm ${statusColor[d.status] || 'bg-muted text-muted-foreground'}`}>{d.status}</span>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
+    );
+  };
+
+  return (
+    <PageContainer>
+      <SearchHeader>
+        <label className="text-xs font-medium text-muted-foreground whitespace-nowrap">Member</label>
+        <SearchBar 
+          value={member} 
+          onChange={setMember} 
+          onSearch={() => handleSearch(1)} 
+          placeholder="e.g., u123456" 
+          loading={loading}
+          storageKey="game_bets_member_search"
+          maxHistory={10}
+        />
+        <label className="text-xs font-medium text-muted-foreground whitespace-nowrap">Site</label>
+        <Input value={site} onChange={(e) => setSite(e.target.value)} placeholder="e.g., JE" className="w-[200px] h-[26px] text-xs" />
+        <label className="text-xs font-medium text-muted-foreground whitespace-nowrap">From</label>
+        <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="w-[200px] h-[26px] text-xs" />
+        <label className="text-xs font-medium text-muted-foreground whitespace-nowrap">To</label>
+        <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="w-[200px] h-[26px] text-xs" />
+        <Button onClick={() => handleSearch(1)} disabled={loading} className="h-[26px] px-2.5 rounded-[5px] gap-1 text-xs" style={{ backgroundColor: 'rgb(32,143,255)', color: '#fff' }}>
+          <Search className="w-3.5 h-3.5" /> Search
+        </Button>
+        <Button onClick={handleSync} disabled={syncing} variant="secondary" className="h-8 gap-1 text-xs">
+          <RefreshCw className={`w-3.5 h-3.5 ${syncing ? 'animate-spin' : ''}`} /> Sync Bets
+        </Button>
+      </SearchHeader>
 
       {data && data.summary && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -105,74 +183,11 @@ const GameBets = () => {
         </div>
       )}
 
+      {data && renderTable(data)}
       {data && (
-        <div className="bg-card border border-border rounded-md overflow-hidden">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="whitespace-nowrap">Time</TableHead>
-                  <TableHead>Ref No</TableHead>
-                  <TableHead>Site/Product</TableHead>
-                  <TableHead className="text-right">Bet</TableHead>
-                  <TableHead className="text-right">Payout</TableHead>
-                  <TableHead className="text-right">Turnover</TableHead>
-                  <TableHead className="text-center">Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {data.items?.map((item: any) => (
-                  <TableRow key={item._id}>
-                    <TableCell className="text-xs p-2 whitespace-nowrap">
-                      {new Date(item.betTime).toLocaleString()}<br/>
-                      <span className="text-muted-foreground">Settle: {new Date(item.settleTime).toLocaleString()}</span>
-                    </TableCell>
-                    <TableCell className="text-xs p-2">{item.refNo}</TableCell>
-                    <TableCell className="text-xs p-2">
-                      <span className="font-semibold">{item.site}</span> / {item.product}
-                      <br/><span className="text-muted-foreground">Game: {item.gameId}</span>
-                    </TableCell>
-                    <TableCell className="text-xs p-2 text-right">₹{item.bet}</TableCell>
-                    <TableCell className="text-xs p-2 text-right text-muted-foreground">₹{item.payout}</TableCell>
-                    <TableCell className="text-xs p-2 text-right">₹{item.turnover}</TableCell>
-                    <TableCell className="text-xs p-2 text-center">
-                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
-                        item.status === 1 ? 'bg-green-500/20 text-green-400' :
-                        item.status === 0 ? 'bg-yellow-500/20 text-yellow-400' :
-                        'bg-red-500/20 text-red-400'
-                      }`}>
-                        {item.status === 1 ? 'Valid' : item.status === 0 ? 'Running' : 'Invalid'}
-                      </span>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {data.items?.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                      No bet records found.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-          
-          <div className="flex items-center justify-between p-4 border-t border-border">
-            <div className="text-xs text-muted-foreground">
-              Showing page {data.page} (Total: {data.total})
-            </div>
-            <div className="flex gap-2">
-              <Button size="sm" variant="outline" onClick={() => handleSearch(data.page - 1)} disabled={data.page === 1 || loading}>
-                Previous
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => handleSearch(data.page + 1)} disabled={data.items?.length < data.limit || loading}>
-                Next
-              </Button>
-            </div>
-          </div>
-        </div>
+        <Pagination page={data.page} totalPages={Math.ceil(data.total / data.limit)} total={data.total} loading={loading} onPageChange={handleSearch} />
       )}
-    </div>
+    </PageContainer>
   );
 };
 

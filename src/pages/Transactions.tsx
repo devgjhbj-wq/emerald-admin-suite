@@ -4,8 +4,8 @@ import { fetchTransactions, setAuthToken } from '@/lib/api';
 import { toast } from 'sonner';
 import SearchBar from '@/components/SearchBar';
 import LastUpdated from '@/components/LastUpdated';
-import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import Loading from '@/components/Loading';
+import { PageContainer, SearchHeader, Pagination } from '@/components/PageContainer';
 
 const Transactions = () => {
   const { token } = useAuth();
@@ -43,80 +43,115 @@ const Transactions = () => {
 
   const totalPages = data ? Math.ceil(data.total / data.limit) : 0;
 
-  return (
-    <div className="space-y-1.5">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 bg-card border border-border p-2 rounded-lg shadow-sm mb-2">
-        <div className="w-full sm:w-auto">
-          <SearchBar 
-            value={userId} 
-            onChange={setUserId} 
-            onSearch={() => load(1)} 
-            placeholder="Enter User ID" 
-            loading={loading}
-            storageKey="transaction_user_search"
-            maxHistory={10}
-          />
+  const renderTable = (data: any) => {
+    const showEmpty = !data?.items?.length;
+
+    return (
+      <div className="relative rounded" style={{ height: 445, border: '1px solid hsl(var(--border))' }}>
+        {loading && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/60">
+            <Loading size={30} />
+          </div>
+        )}
+
+        <div style={{ height: '100%', overflowX: 'auto', overflowY: 'auto' }}>
+          <table className="el-table w-full" style={{ tableLayout: 'fixed', borderCollapse: 'collapse', minWidth: 1050 }}>
+            <colgroup>
+              <col style={{ width: 95 }} />
+              <col style={{ width: 150 }} />
+              <col />
+              <col />
+              <col />
+              <col />
+              <col />
+              <col />
+            </colgroup>
+            <thead style={{ position: 'sticky', top: 0, zIndex: 2, backgroundColor: 'hsl(var(--card))' }}>
+              <tr style={{ height: 50 }}>
+                {['User ID', 'Order ID', 'Type', 'Amount', 'Status', 'Channel', 'Gateway No.', 'Created At'].map((label) => (
+                  <th key={label} style={{ textAlign: 'center', border: '1px solid hsl(var(--border))', padding: '2px 0', fontWeight: 400, fontSize: 14 }}>
+                    <div className="cell">{label}</div>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {showEmpty ? (
+                <tr>
+                  <td colSpan={8} style={{ textAlign: 'center', border: '1px solid hsl(var(--border))', padding: 50, color: 'hsl(var(--muted-foreground))' }}>
+                    <div className="flex flex-col items-center gap-2">
+                      <svg className="w-12 h-12 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" /></svg>
+                      <span>No Data</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                data.items.map((d: any, i: number) => (
+                  <tr key={i} style={{ height: 50 }}>
+                    <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                      <div className="cell">{d.userId}</div>
+                    </td>
+                    <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                      <div className="cell" style={{ fontFamily: 'monospace', fontSize: 11 }}>{d.orderId}</div>
+                    </td>
+                    <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                      <div className="cell">{d.type}</div>
+                    </td>
+                    <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                      <div className="cell">{d.amount ? `₹${Number(d.amount).toLocaleString()}` : '-'}</div>
+                    </td>
+                    <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                      <div className="cell">
+                        <span className={`px-1.5 py-0.5 text-[10px] font-medium rounded-sm ${
+                          d.status === 'SUCCESS' ? 'bg-primary/20 text-primary' :
+                          d.status === 'PENDING' ? 'bg-yellow-500/20 text-yellow-400' :
+                          d.status === 'FAILED' ? 'bg-destructive/20 text-destructive' :
+                          'bg-muted text-muted-foreground'
+                        }`}>{d.status}</span>
+                      </div>
+                    </td>
+                    <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                      <div className="cell">{d.channelName}</div>
+                    </td>
+                    <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                      <div className="cell" style={{ fontFamily: 'monospace', fontSize: 11 }}>{d.gatewayOrderNo || '-'}</div>
+                    </td>
+                    <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                      <div className="cell" style={{ fontSize: 11 }}>{new Date(d.createdAt).toLocaleString()}</div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
-        <LastUpdated timestamp={updatedAt} onRefresh={() => load(page)} loading={loading} />
       </div>
+    );
+  };
+
+  return (
+    <PageContainer>
+      <SearchHeader>
+        <SearchBar 
+          value={userId} 
+          onChange={setUserId} 
+          onSearch={() => load(1)} 
+          placeholder="Enter User ID" 
+          loading={loading}
+          storageKey="transaction_user_search"
+          maxHistory={10}
+        />
+        <LastUpdated timestamp={updatedAt} onRefresh={() => load(page)} loading={loading} />
+      </SearchHeader>
 
       {data?.items && (
         <>
-          <div className="bg-card border border-border overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="border-b border-border bg-secondary/30">
-                    <th className="text-left p-2 text-muted-foreground font-medium">User ID</th>
-                    <th className="text-left p-2 text-muted-foreground font-medium">Type</th>
-                    <th className="text-left p-2 text-muted-foreground font-medium">Amount</th>
-                    <th className="text-left p-2 text-muted-foreground font-medium">Balance After</th>
-                    <th className="text-left p-2 text-muted-foreground font-medium">Status</th>
-                    <th className="text-left p-2 text-muted-foreground font-medium">Order ID</th>
-                    <th className="text-left p-2 text-muted-foreground font-medium">Remark</th>
-                    <th className="text-left p-2 text-muted-foreground font-medium">Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.items.map((t: any, i: number) => (
-                    <tr key={i} className="border-b border-border last:border-0 hover:bg-secondary/20 transition-colors">
-                      <td className="p-2 text-foreground font-medium">{t.userId}</td>
-                      <td className="p-2 text-foreground font-medium">{t.type}</td>
-                      <td className="p-2 text-foreground">₹{t.amount?.toLocaleString()}</td>
-                      <td className="p-2 text-foreground">₹{t.balanceAfter?.toLocaleString()}</td>
-                      <td className="p-2">
-                        <span className={`px-1.5 py-0.5 text-[10px] font-medium ${
-                          t.status === 'SUCCESS' ? 'bg-primary/20 text-primary' :
-                          t.status === 'PENDING' ? 'bg-yellow-500/20 text-yellow-400' :
-                          'bg-destructive/20 text-destructive'
-                        }`}>
-                          {t.status}
-                        </span>
-                      </td>
-                      <td className="p-2 text-muted-foreground font-mono text-[9px]">{t.orderId || '—'}</td>
-                      <td className="p-2 text-muted-foreground">{t.remark || '—'}</td>
-                      <td className="p-2 text-muted-foreground whitespace-nowrap">{new Date(t.createdAt).toLocaleString()}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          {renderTable(data)}
 
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-muted-foreground">Total: {data.total} — Page {page}/{totalPages}</span>
-            <div className="flex gap-1">
-              <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => load(page - 1)}>
-                <ChevronLeft className="w-3.5 h-3.5" />
-              </Button>
-              <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => load(page + 1)}>
-                <ChevronRight className="w-3.5 h-3.5" />
-              </Button>
-            </div>
-          </div>
+          <Pagination page={page} totalPages={totalPages} total={data.total} loading={loading} onPageChange={load} />
         </>
       )}
-    </div>
+    </PageContainer>
   );
 };
 

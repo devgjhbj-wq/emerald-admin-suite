@@ -12,6 +12,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import type { WithdrawalResponse, WithdrawalItem, WithdrawalConfig, WithdrawalFilters } from '@/types/withdrawal';
+import { PageContainer, SearchHeader, Pagination } from '@/components/PageContainer';
 
 const statusColor: Record<string, string> = {
   SUCCESS: 'bg-primary/20 text-primary',
@@ -273,130 +274,191 @@ const Withdrawals = () => {
   const totalPages = results?.total ? Math.ceil(results.total / (results.limit || 50)) : 0;
 
   const renderTable = (data: WithdrawalResponse) => {
-    if (!data?.items?.length) {
-      return (
-        <div className="p-8 text-center text-muted-foreground text-sm border border-border bg-card rounded-lg">
-          No withdrawals found.
-        </div>
-      );
-    }
+    const showEmpty = !data?.items?.length;
 
     return (
-      <div className="bg-card border border-border overflow-hidden rounded-lg">
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="border-b border-border bg-secondary/30">
-                <th className="text-left p-2 text-muted-foreground font-medium">User ID</th>
-                <th className="text-left p-2 text-muted-foreground font-medium">Order ID</th>
-                <th className="text-left p-2 text-muted-foreground font-medium">Amount</th>
-                <th className="text-left p-2 text-muted-foreground font-medium">Charge</th>
-                <th className="text-left p-2 text-muted-foreground font-medium">Pay Method</th>
-                <th className="text-left p-2 text-muted-foreground font-medium">Payment Details</th>
-                <th className="text-left p-2 text-muted-foreground font-medium">Channel</th>
-                <th className="text-left p-2 text-muted-foreground font-medium">Gateway Order No</th>
-                <th className="text-left p-2 text-muted-foreground font-medium">Status</th>
-                <th className="text-left p-2 text-muted-foreground font-medium">Note</th>
-                <th className="text-left p-2 text-muted-foreground font-medium whitespace-nowrap">Created At</th>
-                <th className="text-left p-2 text-muted-foreground font-medium whitespace-nowrap">Updated At</th>
-                <th className="text-left p-2 text-muted-foreground font-medium">Action</th>
+      <div className="relative rounded" style={{ height: 445, border: '1px solid hsl(var(--border))' }}>
+        {loading && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/60">
+            <Loading size={30} />
+          </div>
+        )}
+
+        <div style={{ height: '100%', overflowX: 'auto', overflowY: 'auto' }}>
+          <table className="el-table w-full" style={{ tableLayout: 'fixed', borderCollapse: 'collapse', minWidth: 1200 }}>
+            <colgroup>
+              <col style={{ width: 95 }} />
+              <col style={{ width: 150 }} />
+              <col />
+              <col style={{ width: 90 }} />
+              <col style={{ width: 90 }} />
+              <col style={{ width: 220 }} />
+              <col />
+              <col style={{ width: 130 }} />
+              <col style={{ width: 100 }} />
+              <col style={{ width: 120 }} />
+              <col />
+              <col />
+              <col style={{ width: 100 }} />
+            </colgroup>
+            <thead style={{ position: 'sticky', top: 0, zIndex: 2, backgroundColor: 'hsl(var(--card))' }}>
+              <tr style={{ height: 50 }}>
+                {['User ID', 'Order ID', 'Amount', 'Charge', 'Pay Method', 'Payment Details', 'Channel', 'Gateway No.', 'Status', 'Note', 'Created At', 'Updated At', 'Action'].map((label) => (
+                  <th key={label} style={{ textAlign: 'center', border: '1px solid hsl(var(--border))', padding: '2px 0', fontWeight: 400, fontSize: 14 }}>
+                    <div className="cell">{label}</div>
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
-              {data.items.map((d: WithdrawalItem, i: number) => (
-                <tr key={i} className="border-b border-border last:border-0 hover:bg-secondary/20 transition-colors">
-                  <td className="p-2 text-foreground font-medium">{d.userId}</td>
-                  <td className="p-2 text-foreground font-mono text-[10px]">{d.orderId}</td>
-                  <td className="p-2 text-foreground">₹{d.amount?.toLocaleString()}</td>
-                  <td className="p-2 text-destructive font-medium">
-                    {d.charge ? `₹${Number(d.charge).toFixed(2)}` : '—'}
-                  </td>
-                  <td className="p-2">
-                    {d.paymentMethod ? (
-                      <span className={`px-1.5 py-0.5 text-[10px] font-medium rounded-sm ${
-                        d.paymentMethod === 'UPI' ? 'bg-green-500/20 text-green-400' :
-                        d.paymentMethod === 'BANK' ? 'bg-blue-500/20 text-blue-400' :
-                        'bg-purple-500/20 text-purple-400'
-                      }`}>
-                        {d.paymentMethod}
-                      </span>
-                    ) : (
-                      <span className="text-muted-foreground text-[10px]">-</span>
-                    )}
-                  </td>
-                  <td className="p-2 text-[10px]">
-                    {d.paymentMethod === 'UPI' && d.paymentDetails?.upiId ? (
-                      <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 w-max">
-                        <div className="flex gap-1"><span className="text-muted-foreground font-medium w-10">UPI ID:</span><span className="text-foreground font-mono">{d.paymentDetails.upiId}</span></div>
-                        <div className="flex gap-1"><span className="text-muted-foreground font-medium w-10">Name:</span><span className="text-foreground">{d.paymentDetails.holderName}</span></div>
-                      </div>
-                    ) : d.paymentMethod === 'UPAY' && d.paymentDetails?.rplId ? (
-                      <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 w-max">
-                        <div className="flex gap-1"><span className="text-muted-foreground font-medium w-10">RPL ID:</span><span className="text-foreground font-mono">{d.paymentDetails.rplId}</span></div>
-                        <div className="flex gap-1"><span className="text-muted-foreground font-medium w-10">Name:</span><span className="text-foreground">{d.paymentDetails.holderName}</span></div>
-                      </div>
-                    ) : d.bankDetails ? (
-                      <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 w-max">
-                        <div className="flex gap-1"><span className="text-muted-foreground font-medium w-7">A/C:</span><span className="text-foreground font-mono">{d.bankDetails.accountNumber}</span></div>
-                        <div className="flex gap-1"><span className="text-muted-foreground font-medium w-7">IFSC:</span><span className="text-foreground font-mono">{d.bankDetails.ifsc || d.bankDetails.bankCode || '-'}</span></div>
-                        <div className="flex gap-1"><span className="text-muted-foreground font-medium w-7">Name:</span><span className="text-foreground">{d.bankDetails.accountHolder}</span></div>
-                        <div className="flex gap-1"><span className="text-muted-foreground font-medium w-7">Bank:</span><span className="text-foreground truncate max-w-[100px]" title={d.bankDetails.bankName}>{d.bankDetails.bankName}</span></div>
-                      </div>
-                    ) : (
-                      <span className="text-muted-foreground">-</span>
-                    )}
-                  </td>
-                  <td className="p-2 text-muted-foreground">{d.channelName}</td>
-                  <td className="p-2 text-muted-foreground font-mono text-[10px]">{d.gatewayOrderNo || '-'}</td>
-                  <td className="p-2">
-                    <span className={`px-1.5 py-0.5 text-[10px] font-medium rounded-sm ${statusColor[d.status] || 'bg-muted text-muted-foreground'}`}>
-                      {d.status}
-                    </span>
-                  </td>
-                  <td className="p-2 text-muted-foreground text-[10px] max-w-[120px] truncate" title={d.note || d.remark}>{d.note || d.remark || '-'}</td>
-                  <td className="p-2 text-muted-foreground text-[10px] whitespace-nowrap">{new Date(d.createdAt).toLocaleString()}</td>
-                  <td className="p-2 text-muted-foreground text-[10px] whitespace-nowrap">
-                    {d.updatedAt ? new Date(d.updatedAt).toLocaleString() : '—'}
-                  </td>
-                  <td className="p-2">
-                    <div className="flex gap-1">
-                      {d.status === 'PENDING' && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-primary border-primary/30 hover:bg-primary/10"
-                          disabled={!!approvingId || !!cancellingId}
-                          onClick={() => handleApprove(d.orderId)}
-                        >
-                          {approvingId === d.orderId ? (
-                            <Loading size={14} />
-                          ) : (
-                            <CheckCircle className="w-3.5 h-3.5" />
-                          )}
-                        </Button>
-                      )}
-                      {(d.status === 'PENDING' || d.status === 'AUDITING') && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-destructive border-destructive/30 hover:bg-destructive/10"
-                          disabled={!!approvingId || !!cancellingId}
-                          onClick={() => handleCancel(d)}
-                        >
-                          {cancellingId === d.orderId ? (
-                            <Loading size={14} />
-                          ) : (
-                            <XCircle className="w-3.5 h-3.5" />
-                          )}
-                        </Button>
-                      )}
-                      {d.status !== 'PENDING' && d.status !== 'AUDITING' && (
-                        <span className="text-[10px] text-muted-foreground">—</span>
-                      )}
+              {showEmpty ? (
+                <tr>
+                  <td colSpan={13} style={{ textAlign: 'center', border: '1px solid hsl(var(--border))', padding: 50, color: 'hsl(var(--muted-foreground))' }}>
+                    <div className="flex flex-col items-center gap-2">
+                      <svg className="w-12 h-12 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" /></svg>
+                      <span>No Data</span>
                     </div>
                   </td>
                 </tr>
-              ))}
+              ) : (
+                data.items.map((d: WithdrawalItem, i: number) => (
+                  <tr key={i} style={{ height: 50 }}>
+                    <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                      <div className="cell">{d.userId}</div>
+                    </td>
+                    <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                      <div className="cell" style={{ fontFamily: 'monospace', wordBreak: 'break-all', fontSize: 11 }}>{d.orderId}</div>
+                    </td>
+                    <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                      <div className="cell">₹{d.amount?.toLocaleString()}</div>
+                    </td>
+                    <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                      <div className="cell" style={{ color: 'hsl(var(--destructive))' }}>{d.charge ? `₹${Number(d.charge).toFixed(2)}` : '—'}</div>
+                    </td>
+                    <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                      <div className="cell">
+                        {d.paymentMethod ? (
+                          <span className={`px-1.5 py-0.5 text-[10px] font-medium rounded-sm ${
+                            d.paymentMethod === 'UPI' ? 'bg-green-500/20 text-green-400' :
+                            d.paymentMethod === 'BANK' ? 'bg-blue-500/20 text-blue-400' :
+                            'bg-purple-500/20 text-purple-400'
+                          }`}>
+                            {d.paymentMethod}
+                          </span>
+                        ) : (
+                          <span style={{ color: 'hsl(var(--muted-foreground))' }}>-</span>
+                        )}
+                      </div>
+                    </td>
+                    <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                      <div className="cell" style={{ fontSize: 11, textAlign: 'left' }}>
+                        {d.paymentMethod === 'UPI' && d.paymentDetails?.upiId ? (
+                          <div style={{ lineHeight: 1.4 }}>
+                            <span style={{ color: 'hsl(var(--muted-foreground))' }}>UPI: </span>
+                            <span style={{ fontFamily: 'monospace' }}>{d.paymentDetails.upiId}</span>
+                            <br />
+                            <span style={{ color: 'hsl(var(--muted-foreground))' }}>Name: </span>
+                            <span>{d.paymentDetails.holderName}</span>
+                          </div>
+                        ) : d.paymentMethod === 'UPAY' && d.paymentDetails?.rplId ? (
+                          <div style={{ lineHeight: 1.4 }}>
+                            <span style={{ color: 'hsl(var(--muted-foreground))' }}>RPL: </span>
+                            <span style={{ fontFamily: 'monospace' }}>{d.paymentDetails.rplId}</span>
+                            <br />
+                            <span style={{ color: 'hsl(var(--muted-foreground))' }}>Name: </span>
+                            <span>{d.paymentDetails.holderName}</span>
+                          </div>
+                        ) : d.bankDetails ? (
+                          <div style={{ lineHeight: 1.4 }}>
+                            <span style={{ color: 'hsl(var(--muted-foreground))' }}>A/C: </span>
+                            <span style={{ fontFamily: 'monospace' }}>{d.bankDetails.accountNumber}</span>
+                            <br />
+                            <span style={{ color: 'hsl(var(--muted-foreground))' }}>IFSC: </span>
+                            <span style={{ fontFamily: 'monospace' }}>{d.bankDetails.ifsc || d.bankDetails.bankCode || '-'}</span>
+                            <br />
+                            <span style={{ color: 'hsl(var(--muted-foreground))' }}>Name: </span>
+                            <span>{d.bankDetails.accountHolder}</span>
+                            <br />
+                            <span style={{ color: 'hsl(var(--muted-foreground))' }}>Bank: </span>
+                            <span>{d.bankDetails.bankName}</span>
+                          </div>
+                        ) : (
+                          <span style={{ color: 'hsl(var(--muted-foreground))' }}>-</span>
+                        )}
+                      </div>
+                    </td>
+                    <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                      <div className="cell">{d.channelName}</div>
+                    </td>
+                    <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                      <div className="cell" style={{ fontFamily: 'monospace', fontSize: 11 }}>{d.gatewayOrderNo || '-'}</div>
+                    </td>
+                    <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                      <div className="cell">
+                        <span className={`px-1.5 py-0.5 text-[10px] font-medium rounded-sm ${statusColor[d.status] || 'bg-muted text-muted-foreground'}`}>
+                          {d.status}
+                        </span>
+                      </div>
+                    </td>
+                    <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                      <div className="cell">{d.note || d.remark || '-'}</div>
+                    </td>
+                    <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                      <div className="cell" style={{ fontSize: 11 }}>{new Date(d.createdAt).toLocaleString()}</div>
+                    </td>
+                    <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                      <div className="cell" style={{ fontSize: 11 }}>{d.updatedAt ? new Date(d.updatedAt).toLocaleString() : '—'}</div>
+                    </td>
+                    <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                      <div className="cell">
+                        <div style={{ display: 'flex', gap: 4, justifyContent: 'center' }}>
+                          {d.status === 'PENDING' && (
+                            <button
+                              onClick={() => handleApprove(d.orderId)}
+                              disabled={!!approvingId || !!cancellingId}
+                              style={{
+                                background: approvingId === d.orderId ? 'hsl(var(--primary) / 0.5)' : 'hsl(var(--primary))',
+                                color: '#fff',
+                                border: 'none',
+                                borderRadius: 2,
+                                padding: '4px 6px',
+                                fontSize: 11,
+                                cursor: (!!approvingId || !!cancellingId) ? 'not-allowed' : 'pointer',
+                                lineHeight: 1,
+                                opacity: (!!approvingId || !!cancellingId) ? 0.6 : 1,
+                              }}
+                            >
+                              {approvingId === d.orderId ? '...' : '✓'}
+                            </button>
+                          )}
+                          {(d.status === 'PENDING' || d.status === 'AUDITING') && (
+                            <button
+                              onClick={() => handleCancel(d)}
+                              disabled={!!approvingId || !!cancellingId}
+                              style={{
+                                background: (!!approvingId || !!cancellingId) ? 'hsl(var(--destructive) / 0.5)' : 'hsl(var(--destructive))',
+                                color: '#fff',
+                                border: 'none',
+                                borderRadius: 2,
+                                padding: '4px 6px',
+                                fontSize: 11,
+                                cursor: (!!approvingId || !!cancellingId) ? 'not-allowed' : 'pointer',
+                                lineHeight: 1,
+                                opacity: (!!approvingId || !!cancellingId) ? 0.6 : 1,
+                              }}
+                            >
+                              {cancellingId === d.orderId ? '...' : '✕'}
+                            </button>
+                          )}
+                          {d.status !== 'PENDING' && d.status !== 'AUDITING' && (
+                            <span style={{ color: 'hsl(var(--muted-foreground))', fontSize: 11 }}>—</span>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -405,7 +467,7 @@ const Withdrawals = () => {
   };
 
   return (
-    <div className="space-y-3">
+    <PageContainer>
       {/* Tab Bar */}
       <div className="flex gap-4 border-b border-border">
         <button onClick={() => setTab('orders')} className={`pb-1.5 text-xs font-medium border-b-2 transition-colors ${tab === 'orders' ? 'text-primary border-primary' : 'text-muted-foreground border-transparent hover:text-foreground'}`}>
@@ -418,277 +480,166 @@ const Withdrawals = () => {
 
       {tab === 'orders' && (
       <>
-      {/* Search & Filter Bar */}
-      <div className="bg-card border border-border p-2 rounded-lg shadow-sm space-y-2">
-        {/* Row 1: ID Searches */}
-        <div className="flex flex-wrap items-end gap-3">
-          <div className="flex-1 min-w-[180px]">
-            <label className="text-[10px] font-medium text-muted-foreground uppercase mb-1 block">User ID Search</label>
-            <div className="flex gap-1">
-              <div className="flex-1">
-                <SearchBar 
-                  value={userId} 
-                  onChange={setUserId} 
-                  onSearch={() => loadByUserId(1)} 
-                  placeholder="Ex: 123456"
-                  loading={loading && lastSearchType === 'user'}
-                  storageKey="withdrawal_user_search"
-                  maxHistory={5}
-                  hideButton={true}
-                />
-              </div>
-              <Button 
-                onClick={() => loadByUserId(1)} 
-                disabled={loading} 
-                size="sm"
-                className="h-6 px-2 text-[11px]"
-              >
-                Search
-              </Button>
-            </div>
-          </div>
+      <SearchHeader>
+        <label className="text-xs font-medium text-muted-foreground whitespace-nowrap mr-[3px]">User ID</label>
+        <SearchBar 
+          value={userId} 
+          onChange={setUserId} 
+          onSearch={() => loadByUserId(1)} 
+          placeholder="Ex: 123456"
+          loading={loading && lastSearchType === 'user'}
+          storageKey="withdrawal_user_search"
+          maxHistory={5}
+          hideButton={true}
+        />
+        <Button 
+          onClick={() => loadByUserId(1)} 
+          disabled={loading} 
+          size="sm"
+          className="h-[26px] px-2.5 text-xs rounded-[5px]"
+          style={{ backgroundColor: 'rgb(32,143,255)', color: '#fff' }}
+        >
+          Search
+        </Button>
 
-          <div className="flex-1 min-w-[180px]">
-            <label className="text-[10px] font-medium text-muted-foreground uppercase mb-1 block">Order ID Search</label>
-            <div className="flex gap-1">
-              <div className="flex-1">
-                <SearchBar 
-                  value={orderId} 
-                  onChange={setOrderId} 
-                  onSearch={loadByOrderId} 
-                  placeholder="Ex: WD..."
-                  loading={loading && lastSearchType === 'order'}
-                  storageKey="withdrawal_order_search"
-                  maxHistory={5}
-                  hideButton={true}
-                />
-              </div>
-              <Button 
-                onClick={loadByOrderId} 
-                disabled={loading} 
-                size="sm"
-                className="h-6 px-2 text-[11px]"
-              >
-                Search
-              </Button>
-            </div>
-          </div>
-        </div>
+        <label className="text-xs font-medium text-muted-foreground whitespace-nowrap mr-[3px] ml-[3px]">Order ID</label>
+        <SearchBar 
+          value={orderId} 
+          onChange={setOrderId} 
+          onSearch={loadByOrderId} 
+          placeholder="Ex: WD..."
+          loading={loading && lastSearchType === 'order'}
+          storageKey="withdrawal_order_search"
+          maxHistory={5}
+          hideButton={true}
+        />
+        <Button 
+          onClick={loadByOrderId} 
+          disabled={loading} 
+          size="sm"
+          className="h-[26px] px-2.5 text-xs rounded-[5px]"
+          style={{ backgroundColor: 'rgb(32,143,255)', color: '#fff' }}
+        >
+          Search
+        </Button>
 
-        {/* Row 2: Global Filters */}
-        <div className="flex flex-wrap items-end gap-2 pt-2 border-t border-border/50">
-          <div className="w-[120px]">
-            <label className="text-[10px] font-medium text-muted-foreground uppercase mb-1 block">Status</label>
-            <select
-              className="flex h-6 w-full rounded border border-input bg-background px-2 py-0.5 text-[11px] shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
+        <label className="text-xs font-medium text-muted-foreground whitespace-nowrap mr-[3px] ml-[3px]">Status</label>
+        <select
+          className="w-[200px] h-[26px] rounded border border-input bg-background px-1.5 text-xs"
+          value={status}
+          onChange={(e) => setStatus(e.target.value)}
+        >
+          <option value="">All Status</option>
+          <option value="PENDING">PENDING</option>
+          <option value="AUDITING">AUDITING</option>
+          <option value="SUCCESS">SUCCESS</option>
+          <option value="FAILED">FAILED</option>
+          <option value="CANCELLED">CANCELLED</option>
+        </select>
+
+        <label className="text-xs font-medium text-muted-foreground whitespace-nowrap mr-[3px] ml-[3px]">Charge</label>
+        <select
+          className="w-[200px] h-[26px] rounded border border-input bg-background px-1.5 text-xs"
+          value={chargeFrom}
+          onChange={(e) => setChargeFrom(e.target.value as 'user' | 'platform')}
+        >
+          <option value="user">User</option>
+          <option value="platform">Platform</option>
+        </select>
+
+        <label className="text-xs font-medium text-muted-foreground whitespace-nowrap mr-[3px] ml-[3px]">Date</label>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className={cn(
+                "w-[130px] justify-start text-left font-normal text-xs h-[26px] px-2 rounded-[5px]",
+                !dateFrom && "text-muted-foreground"
+              )}
             >
-              <option value="">All Status</option>
-              <option value="PENDING">PENDING</option>
-              <option value="AUDITING">AUDITING</option>
-              <option value="SUCCESS">SUCCESS</option>
-              <option value="FAILED">FAILED</option>
-              <option value="CANCELLED">CANCELLED</option>
-            </select>
-          </div>
-          <div className="w-[110px]">
-            <label className="text-[10px] font-medium text-muted-foreground uppercase mb-1 block">Charge From</label>
-            <select
-              className="flex h-6 w-full rounded border border-input bg-background px-2 py-0.5 text-[11px] shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              value={chargeFrom}
-              onChange={(e) => setChargeFrom(e.target.value as 'user' | 'platform')}
-            >
-              <option value="user">User</option>
-              <option value="platform">Platform</option>
-            </select>
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <div className="flex items-center justify-between mb-0.5">
-              <label className="text-[10px] font-medium text-muted-foreground uppercase block">Date Range</label>
-              <button 
-                onClick={handleToday}
-                className="text-[10px] font-bold text-primary hover:underline"
-              >
-                Today
-              </button>
-            </div>
-            <div className="flex items-center gap-1">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-[130px] justify-start text-left font-normal text-[10px] h-6 px-2",
-                      !dateFrom && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-1 h-2.5 w-2.5" />
-                    {dateFrom ? format(dateFrom, "MMM dd, yyyy") : "From"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar 
-                    mode="single" 
-                    selected={dateFrom} 
-                    onSelect={setDateFrom} 
-                    initialFocus 
-                    captionLayout="dropdown-buttons"
-                    fromYear={2024}
-                    toYear={2026}
-                  />
-                </PopoverContent>
-              </Popover>
-              <span className="text-muted-foreground text-[10px]">to</span>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-[130px] justify-start text-left font-normal text-[10px] h-6 px-2",
-                      !dateTo && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-1 h-2.5 w-2.5" />
-                    {dateTo ? format(dateTo, "MMM dd, yyyy") : "To"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar 
-                    mode="single" 
-                    selected={dateTo} 
-                    onSelect={setDateTo} 
-                    initialFocus 
-                    captionLayout="dropdown-buttons"
-                    fromYear={2024}
-                    toYear={2026}
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-1.5">
-            <Button 
-              onClick={() => loadGlobalSearch(1)} 
-              disabled={loading} 
-              size="sm"
-              className="h-6 px-3 text-[11px] font-semibold"
-            >
-              {loading && lastSearchType === 'global' ? <Loading size={10} className="mr-1" /> : null}
-              Global Search
+              <CalendarIcon className="mr-1 h-3 w-3" />
+              {dateFrom ? format(dateFrom, "MMM dd, yyyy") : "From"}
             </Button>
-            <Button 
-              onClick={handleClear} 
-              variant="outline" 
-              size="sm"
-              className="h-6 px-2 text-[11px]"
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar 
+              mode="single" 
+              selected={dateFrom} 
+              onSelect={setDateFrom} 
+              initialFocus 
+              captionLayout="dropdown-buttons"
+              fromYear={2024}
+              toYear={2026}
+            />
+          </PopoverContent>
+        </Popover>
+        <span className="text-muted-foreground text-xs">to</span>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className={cn(
+                "w-[130px] justify-start text-left font-normal text-xs h-[26px] px-2 rounded-[5px]",
+                !dateTo && "text-muted-foreground"
+              )}
             >
-              Reset
+              <CalendarIcon className="mr-1 h-3 w-3" />
+              {dateTo ? format(dateTo, "MMM dd, yyyy") : "To"}
             </Button>
-            <div className="ml-1 border-l border-border pl-2 flex items-center h-6">
-              <LastUpdated 
-                timestamp={updatedAt} 
-                onRefresh={handleRefresh} 
-                loading={loading} 
-                compact 
-              />
-            </div>
-          </div>
-        </div>
-      </div>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar 
+              mode="single" 
+              selected={dateTo} 
+              onSelect={setDateTo} 
+              initialFocus 
+              captionLayout="dropdown-buttons"
+              fromYear={2024}
+              toYear={2026}
+            />
+          </PopoverContent>
+        </Popover>
+        <button 
+          onClick={handleToday}
+          className="text-xs text-primary hover:underline"
+        >
+          Today
+        </button>
 
-      {/* Results Table */}
+        <Button 
+          onClick={() => loadGlobalSearch(1)} 
+          disabled={loading} 
+          size="sm"
+          className="h-[26px] px-2.5 gap-1 text-xs rounded-[5px]"
+          style={{ backgroundColor: 'rgb(32,143,255)', color: '#fff' }}
+        >
+          {loading && lastSearchType === 'global' ? <Loading size={12} /> : null}
+          Global Search
+        </Button>
+        <Button 
+          onClick={handleClear} 
+          variant="outline" 
+          size="sm"
+          className="h-[26px] px-2.5 text-xs rounded-[5px]"
+        >
+          Reset
+        </Button>
+        <LastUpdated 
+          timestamp={updatedAt} 
+          onRefresh={handleRefresh} 
+          loading={loading} 
+          compact 
+        />
+      </SearchHeader>
+
       {results && (
-        <div className="space-y-3">
+        <>
           {renderTable(results)}
-          
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-end bg-card border border-border p-2 rounded-lg gap-4">
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground">Total {results.total}</span>
-              </div>
-              
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0"
-                  disabled={page <= 1 || loading}
-                  onClick={() => {
-                    const nextPage = page - 1;
-                    if (lastSearchType === 'user') loadByUserId(nextPage);
-                    else if (lastSearchType === 'global') loadGlobalSearch(nextPage);
-                  }}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                
-                <div className="flex items-center gap-1">
-                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                    let pageNum;
-                    if (totalPages <= 5) {
-                      pageNum = i + 1;
-                    } else if (page <= 3) {
-                      pageNum = i + 1;
-                    } else if (page >= totalPages - 2) {
-                      pageNum = totalPages - 4 + i;
-                    } else {
-                      pageNum = page - 2 + i;
-                    }
-                    
-                    return (
-                      <Button
-                        key={pageNum}
-                        variant={page === pageNum ? "secondary" : "ghost"}
-                        size="sm"
-                        className={cn(
-                          "h-8 w-8 p-0 text-xs font-medium",
-                          page === pageNum ? "text-primary" : "text-foreground"
-                        )}
-                        onClick={() => {
-                          if (page !== pageNum) {
-                            if (lastSearchType === 'user') loadByUserId(pageNum);
-                            else if (lastSearchType === 'global') loadGlobalSearch(pageNum);
-                          }
-                        }}
-                      >
-                        {pageNum}
-                      </Button>
-                    );
-                  })}
-                </div>
-
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0"
-                  disabled={page >= totalPages || loading}
-                  onClick={() => {
-                    const nextPage = page + 1;
-                    if (lastSearchType === 'user') loadByUserId(nextPage);
-                    else if (lastSearchType === 'global') loadGlobalSearch(nextPage);
-                  }}
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-
-              <div className="flex items-center gap-2 border-l border-border pl-4">
-                <span className="text-xs text-muted-foreground">Go to</span>
-                <input
-                  type="text"
-                  value={pageInput}
-                  onChange={(e) => setPageInput(e.target.value)}
-                  onKeyDown={handlePageGo}
-                  className="w-12 h-8 rounded border border-input bg-background px-2 py-1 text-xs text-center focus:outline-none focus:ring-1 focus:ring-primary"
-                />
-              </div>
-            </div>
-          )}
-        </div>
+          <Pagination page={page} totalPages={totalPages} total={results.total} loading={loading} onPageChange={(p) => {
+            if (lastSearchType === 'user') loadByUserId(p);
+            else if (lastSearchType === 'global') loadGlobalSearch(p);
+          }} />
+        </>
       )}
       </>
       )}
@@ -714,7 +665,7 @@ const Withdrawals = () => {
                 {(['BANK', 'UPI', 'UPAY'] as const).map((method) => (
                   <div key={method} className="border border-border rounded p-3 space-y-2">
                     <span className="text-xs font-semibold text-foreground">{method}</span>
-                    <div className="flex gap-2">
+                    <div className="flex ga">
                       <div className="flex-1">
                         <label className="text-[10px] text-muted-foreground">Min</label>
                         <input
@@ -739,7 +690,7 @@ const Withdrawals = () => {
                   </div>
                 ))}
               </div>
-              <div className="flex gap-2">
+              <div className="flex ga">
                 <Button onClick={handleSaveConfig} disabled={configSaving} size="sm" className="h-7 text-xs">
                   {configSaving && <Loading size={12} className="mr-1" />}
                   Save Config
@@ -752,7 +703,7 @@ const Withdrawals = () => {
           )}
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 };
 

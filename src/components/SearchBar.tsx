@@ -156,7 +156,7 @@ const SearchBar = ({
             onKeyDown={handleKeyDown}
             onFocus={() => setShowSuggestions(true)}
             placeholder={placeholder}
-            className="bg-secondary/50 text-foreground placeholder:text-muted-foreground border-border w-full h-6 px-2 py-0.5 text-[11px] pr-6"
+            className="bg-secondary/50 text-foreground placeholder:text-muted-foreground border-border w-full h-8 px-2 text-xs pr-6"
           />
           {value && (
             <button
@@ -172,9 +172,9 @@ const SearchBar = ({
           <Button 
             onClick={handleSearch} 
             disabled={loading || !value.trim()} 
-            className="h-6 px-2 whitespace-nowrap text-[11px] flex-shrink-0"
+            className="h-8 px-2.5 whitespace-nowrap text-xs flex-shrink-0"
           >
-            <Search className="w-2.5 h-2.5 mr-1" />
+            <Search className="w-3 h-3 mr-1" />
             {loading ? 'Searching...' : 'Go'}
           </Button>
         )}

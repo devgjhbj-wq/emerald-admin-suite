@@ -32,14 +32,6 @@ import {
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -382,50 +374,63 @@ const WingoDashboard = () => {
                 </CardHeader>
                 {showBets && (
                   <CardContent className="pt-0">
-                    <div className="rounded-lg border overflow-hidden">
-                      <Table>
-                        <TableHeader>
-                          <TableRow className="bg-secondary/30">
-                            <TableHead className="text-[10px]">User</TableHead>
-                            <TableHead className="text-[10px]">Order</TableHead>
-                            <TableHead className="text-[10px]">Type</TableHead>
-                            <TableHead className="text-[10px] text-right">Amount</TableHead>
-                            <TableHead className="text-[10px]">Status</TableHead>
-                            <TableHead className="text-[10px]">Time</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {currentRoundBets.length === 0 ? (
-                            <TableRow>
-                              <TableCell colSpan={6} className="text-center text-muted-foreground py-6">
-                                No bets yet
-                              </TableCell>
-                            </TableRow>
-                          ) : (
-                            currentRoundBets.map(bet => (
-                              <TableRow key={bet._id}>
-                                <TableCell className="py-1.5">
-                                  <div>
-                                    <p className="text-[11px] font-medium">{bet.mobile}</p>
-                                    <p className="text-[9px] text-muted-foreground">ID: {bet.userId}</p>
+                    <div className="relative rounded" style={{ height: 445, border: '1px solid hsl(var(--border))' }}>
+                      <div style={{ height: '100%', overflowX: 'auto', overflowY: 'auto' }}>
+                        <table className="el-table w-full" style={{ tableLayout: 'fixed', borderCollapse: 'collapse', minWidth: 800 }}>
+                          <colgroup>
+                            <col />
+                            <col />
+                            <col />
+                            <col />
+                            <col />
+                            <col />
+                          </colgroup>
+                          <thead style={{ position: 'sticky', top: 0, zIndex: 2, backgroundColor: 'hsl(var(--card))' }}>
+                            <tr style={{ height: 50 }}>
+                              {['User', 'Number', 'Amount', 'Side', 'Time', 'Payout'].map((label) => (
+                                <th key={label} style={{ textAlign: 'center', border: '1px solid hsl(var(--border))', padding: '2px 0', fontWeight: 400, fontSize: 14 }}>
+                                  <div className="cell">{label}</div>
+                                </th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {currentRoundBets.length === 0 ? (
+                              <tr>
+                                <td colSpan={6} style={{ textAlign: 'center', border: '1px solid hsl(var(--border))', padding: 50, color: 'hsl(var(--muted-foreground))' }}>
+                                  <div className="flex flex-col items-center gap-2">
+                                    <svg className="w-12 h-12 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" /></svg>
+                                    <span>No Data</span>
                                   </div>
-                                </TableCell>
-                                <TableCell className="py-1.5 text-[10px] font-mono">{bet.orderNumber}</TableCell>
-                                <TableCell className="py-1.5">
-                                  <Badge variant="outline" className="text-[9px] capitalize">{bet.selectType}</Badge>
-                                </TableCell>
-                                <TableCell className="py-1.5 text-right text-[10px] font-bold">₹{bet.betAmount.toLocaleString()}</TableCell>
-                                <TableCell className="py-1.5">
-                                  <Badge variant="outline" className="text-[9px]">{bet.status}</Badge>
-                                </TableCell>
-                                <TableCell className="py-1.5 text-[10px] text-muted-foreground">
-                                  {new Date(bet.createdAt).toLocaleTimeString()}
-                                </TableCell>
-                              </TableRow>
-                            ))
-                          )}
-                        </TableBody>
-                      </Table>
+                                </td>
+                              </tr>
+                            ) : (
+                              currentRoundBets.map((bet: any, i: number) => (
+                                <tr key={i} style={{ height: 50 }}>
+                                  <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                                    <div className="cell">{bet.userId || bet.user}</div>
+                                  </td>
+                                  <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                                    <div className="cell">{bet.number}</div>
+                                  </td>
+                                  <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                                    <div className="cell">{bet.amount ? `₹${Number(bet.amount).toLocaleString()}` : '-'}</div>
+                                  </td>
+                                  <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                                    <div className="cell">{bet.side || '-'}</div>
+                                  </td>
+                                  <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                                    <div className="cell" style={{ fontSize: 11 }}>{bet.createdAt ? new Date(bet.createdAt).toLocaleString() : '-'}</div>
+                                  </td>
+                                  <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                                    <div className="cell">{bet.payout ? `₹${Number(bet.payout).toLocaleString()}` : '-'}</div>
+                                  </td>
+                                </tr>
+                              ))
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
                   </CardContent>
                 )}
@@ -487,88 +492,126 @@ const WingoDashboard = () => {
                 </div>
               </div>
             </CardHeader>
-            {showHistory && (
-              <CardContent className="pt-0">
-                <div className="rounded-lg border overflow-hidden">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="bg-secondary/30">
-                        <TableHead className="text-[10px]">Issue</TableHead>
-                        <TableHead className="text-[10px]">Result</TableHead>
-                        <TableHead className="text-[10px]">Mode</TableHead>
-                        <TableHead className="text-[10px] text-right">Bets</TableHead>
-                        <TableHead className="text-[10px] text-right">Turnover</TableHead>
-                        <TableHead className="text-[10px] text-right">Payout</TableHead>
-                        <TableHead className="text-[10px] text-right">Profit/Loss</TableHead>
-                        <TableHead className="text-[10px]">Won/Lost</TableHead>
-                        <TableHead className="text-[10px]">Action</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {settledRounds.map(round => (
-                        <TableRow key={round.issueNumber}>
-                          <TableCell className="py-1.5 text-[10px] font-mono">{round.issueNumber}</TableCell>
-                          <TableCell className="py-1.5">
-                            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-black text-white ${getNumberBgColor(round.result.number)}`}>
-                              {round.result.number}
-                            </div>
-                          </TableCell>
-                          <TableCell className="py-1.5 text-[10px]">{round.resultMode}</TableCell>
-                          <TableCell className="py-1.5 text-right text-[10px]">{round.stats.totalBets}</TableCell>
-                        <TableCell className="py-1.5 text-right text-[10px] font-bold">₹{round.stats.totalBetAmount.toLocaleString()}</TableCell>
-                        <TableCell className="py-1.5 text-right text-[10px] font-bold">₹{round.stats.totalPayout.toLocaleString()}</TableCell>
-                        <TableCell className="py-1.5 text-right">
-                          <span className={`text-[10px] font-bold ${(round.stats.totalBetAmount - round.stats.totalPayout) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                            {(round.stats.totalBetAmount - round.stats.totalPayout) >= 0 ? '+' : ''}₹{(round.stats.totalBetAmount - round.stats.totalPayout).toLocaleString()}
-                          </span>
-                        </TableCell>
-                        <TableCell className="py-1.5">
-                          <div className="flex items-center gap-1 text-[10px]">
-                            <span className="text-green-500 font-bold">{round.stats.wonCount}</span>
-                            <span className="text-muted-foreground">/</span>
-                            <span className="text-red-500 font-bold">{round.stats.lostCount}</span>
-                          </div>
-                        </TableCell>
-                          <TableCell className="py-1.5">
-                          <Button 
-                            variant="outline"
-                            size="sm"
-                            className="h-6 px-2 text-[9px]"
-                            onClick={async () => {
-                              setLoadingStats(true);
-                              try {
-                                if (token) {
-                                  setAuthToken(token);
-                                }
-                                console.log('Fetching stats for issueNumber:', round.issueNumber);
-                                const res = await fetchWingoRoundStats(round.issueNumber);
-                                console.log('Round stats response:', res);
-                                setSelectedRoundStats(res.data);
-                                setStatsDialogOpen(true);
-                              } catch (err: any) {
-                                console.error('Error fetching round stats:', err);
-                                console.error('Error response:', err.response);
-                                toast.error('Failed to load round stats: ' + (err.response?.data?.msg || err.response?.data?.message || err.message));
-                              } finally {
-                                setLoadingStats(false);
-                              }
-                            }}
-                            disabled={loadingStats}
-                          >
-                            {loadingStats ? (
-                              <RefreshCw className="w-3 h-3 animate-spin" />
-                            ) : (
-                              'Stats'
-                            )}
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-            )}
+              {showHistory && (
+                <CardContent className="pt-0">
+                  <div className="relative rounded" style={{ height: 445, border: '1px solid hsl(var(--border))' }}>
+                    <div style={{ height: '100%', overflowX: 'auto', overflowY: 'auto' }}>
+                      <table className="el-table w-full" style={{ tableLayout: 'fixed', borderCollapse: 'collapse', minWidth: 1050 }}>
+                        <colgroup>
+                          <col style={{ width: 120 }} />
+                          <col style={{ width: 50 }} />
+                          <col style={{ width: 90 }} />
+                          <col style={{ width: 60 }} />
+                          <col style={{ width: 110 }} />
+                          <col style={{ width: 110 }} />
+                          <col style={{ width: 130 }} />
+                          <col style={{ width: 90 }} />
+                          <col style={{ width: 80 }} />
+                        </colgroup>
+                        <thead style={{ position: 'sticky', top: 0, zIndex: 2, backgroundColor: 'hsl(var(--card))' }}>
+                          <tr style={{ height: 50 }}>
+                            {['Issue', 'Result', 'Mode', 'Bets', 'Turnover', 'Payout', 'Profit/Loss', 'Won/Lost', 'Action'].map((label) => (
+                              <th key={label} style={{ textAlign: 'center', border: '1px solid hsl(var(--border))', padding: '2px 0', fontWeight: 400, fontSize: 14 }}>
+                                <div className="cell">{label}</div>
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {settledRounds.length === 0 ? (
+                            <tr>
+                              <td colSpan={9} style={{ textAlign: 'center', border: '1px solid hsl(var(--border))', padding: 50, color: 'hsl(var(--muted-foreground))' }}>
+                                <div className="flex flex-col items-center gap-2">
+                                  <svg className="w-12 h-12 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" /></svg>
+                                  <span>No Data</span>
+                                </div>
+                              </td>
+                            </tr>
+                          ) : (
+                            settledRounds.map(round => (
+                              <tr key={round.issueNumber} style={{ height: 50 }}>
+                                <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                                  <div className="cell" style={{ fontFamily: 'monospace', fontSize: 11 }}>{round.issueNumber}</div>
+                                </td>
+                                <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                                  <div className="cell">
+                                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-black text-white ${getNumberBgColor(round.result.number)}`} style={{ margin: '0 auto' }}>
+                                      {round.result.number}
+                                    </div>
+                                  </div>
+                                </td>
+                                <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                                  <div className="cell" style={{ fontSize: 11 }}>{round.resultMode}</div>
+                                </td>
+                                <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                                  <div className="cell" style={{ fontSize: 11 }}>{round.stats.totalBets}</div>
+                                </td>
+                                <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                                  <div className="cell" style={{ fontSize: 11 }}>₹{round.stats.totalBetAmount.toLocaleString()}</div>
+                                </td>
+                                <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                                  <div className="cell" style={{ fontSize: 11 }}>₹{round.stats.totalPayout.toLocaleString()}</div>
+                                </td>
+                                <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                                  <div className="cell">
+                                    <span style={{ fontSize: 11, fontWeight: 'bold', color: (round.stats.totalBetAmount - round.stats.totalPayout) >= 0 ? 'rgb(34,197,94)' : 'rgb(239,68,68)' }}>
+                                      {(round.stats.totalBetAmount - round.stats.totalPayout) >= 0 ? '+' : ''}₹{(round.stats.totalBetAmount - round.stats.totalPayout).toLocaleString()}
+                                    </span>
+                                  </div>
+                                </td>
+                                <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                                  <div className="cell">
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, fontSize: 11 }}>
+                                      <span style={{ color: 'rgb(34,197,94)', fontWeight: 'bold' }}>{round.stats.wonCount}</span>
+                                      <span style={{ color: 'hsl(var(--muted-foreground))' }}>/</span>
+                                      <span style={{ color: 'rgb(239,68,68)', fontWeight: 'bold' }}>{round.stats.lostCount}</span>
+                                    </div>
+                                  </div>
+                                </td>
+                                <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                                  <div className="cell">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      style={{ height: 24, padding: '0 8px', fontSize: 11, borderRadius: 2 }}
+                                      onClick={async () => {
+                                        setLoadingStats(true);
+                                        try {
+                                          if (token) {
+                                            setAuthToken(token);
+                                          }
+                                          console.log('Fetching stats for issueNumber:', round.issueNumber);
+                                          const res = await fetchWingoRoundStats(round.issueNumber);
+                                          console.log('Round stats response:', res);
+                                          setSelectedRoundStats(res.data);
+                                          setStatsDialogOpen(true);
+                                        } catch (err: any) {
+                                          console.error('Error fetching round stats:', err);
+                                          console.error('Error response:', err.response);
+                                          toast.error('Failed to load round stats: ' + (err.response?.data?.msg || err.response?.data?.message || err.message));
+                                        } finally {
+                                          setLoadingStats(false);
+                                        }
+                                      }}
+                                      disabled={loadingStats}
+                                    >
+                                      {loadingStats ? (
+                                        <RefreshCw className="w-3 h-3 animate-spin" />
+                                      ) : (
+                                        'Stats'
+                                      )}
+                                    </Button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </CardContent>
+              )}
           </Card>
         </TabsContent>
 
@@ -678,7 +721,7 @@ const WingoDashboard = () => {
                     value={resultMode} 
                     onValueChange={(v: any) => setResultMode(v)}
                   >
-                    <SelectTrigger className="h-9 text-xs">
+                    <SelectTrigger className="h-8 text-xs">
                       <SelectValue placeholder="Select mode" />
                     </SelectTrigger>
                     <SelectContent>

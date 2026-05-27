@@ -193,7 +193,7 @@ const AgencyDashboard = () => {
   const renderAggregation = (agg: any) => {
     if (!agg) return null;
     return (
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-[10px]">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gatext-[10px]">
         <div><span className="text-muted-foreground">Deposit Count: </span><span className="font-medium">{agg.depositCount ?? 0}</span></div>
         <div><span className="text-muted-foreground">Deposit Amt: </span><span className="font-medium">₹{(agg.depositAmount ?? 0).toLocaleString()}</span></div>
         <div><span className="text-muted-foreground">Bettor Count: </span><span className="font-medium">{agg.bettorCount ?? 0}</span></div>
@@ -218,12 +218,12 @@ const AgencyDashboard = () => {
       {/* ── Stats Tab ── */}
       {tab === 'Stats' && (
         <div className="space-y-2">
-          <div className="bg-card border border-border p-2 rounded-lg">
+          <div className="bg-card border border-border rounded-lg">
             <SearchBar value={statsUserId} onChange={setStatsUserId} onSearch={() => loadStats(1)} placeholder="Enter Agent User ID" loading={statsLoading} storageKey="agency_stats_search" maxHistory={5} />
           </div>
 
           {statsData?.agent && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 ga">
               <div className="bg-card border border-border p-3 rounded-lg space-y-1">
                 <h3 className="text-xs font-semibold text-foreground">Agent Info</h3>
                 <InfoRow label="User ID" value={statsData.agent.userId} />
@@ -246,30 +246,54 @@ const AgencyDashboard = () => {
             </div>
           )}
 
-          {statsData?.invitees?.length > 0 && (
+          {statsData?.invitees && (
             <>
-              <div className="bg-card border border-border overflow-hidden rounded-lg">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-xs">
-                    <thead>
-                      <tr className="border-b border-border bg-secondary/30">
-                        <th className="text-left p-2 text-muted-foreground font-medium">User ID</th>
-                        <th className="text-left p-2 text-muted-foreground font-medium">Mobile</th>
-                        <th className="text-left p-2 text-muted-foreground font-medium">Deposits</th>
-                        <th className="text-left p-2 text-muted-foreground font-medium">Withdrawals</th>
-                        <th className="text-left p-2 text-muted-foreground font-medium">Joined</th>
+              <div className="relative rounded" style={{ height: 445, border: '1px solid hsl(var(--border))' }}>
+                <div style={{ height: '100%', overflowX: 'auto', overflowY: 'auto' }}>
+                  <table className="el-table w-full" style={{ tableLayout: 'fixed', borderCollapse: 'collapse', minWidth: 800 }}>
+                    <colgroup>
+                      <col />
+                      <col />
+                      <col />
+                      <col />
+                    </colgroup>
+                    <thead style={{ position: 'sticky', top: 0, zIndex: 2, backgroundColor: 'hsl(var(--card))' }}>
+                      <tr style={{ height: 50 }}>
+                        {['User ID', 'Username', 'Direct Invitees', 'Team Size'].map((label) => (
+                          <th key={label} style={{ textAlign: 'center', border: '1px solid hsl(var(--border))', padding: '2px 0', fontWeight: 400, fontSize: 14 }}>
+                            <div className="cell">{label}</div>
+                          </th>
+                        ))}
                       </tr>
                     </thead>
                     <tbody>
-                      {statsData.invitees.map((inv: any, i: number) => (
-                        <tr key={i} className="border-b border-border last:border-0 hover:bg-secondary/20 transition-colors">
-                          <td className="p-2 text-foreground font-mono text-[10px]">{inv.userId}</td>
-                          <td className="p-2 text-muted-foreground">{inv.mobile || '—'}</td>
-                          <td className="p-2 text-primary font-medium">₹{(inv.totals?.deposit ?? 0).toLocaleString()}</td>
-                          <td className="p-2 text-destructive font-medium">₹{(inv.totals?.withdraw ?? 0).toLocaleString()}</td>
-                          <td className="p-2 text-muted-foreground">{new Date(inv.createdAt).toLocaleString()}</td>
+                      {statsData?.invitees?.length === 0 ? (
+                        <tr>
+                          <td colSpan={4} style={{ textAlign: 'center', border: '1px solid hsl(var(--border))', padding: 50, color: 'hsl(var(--muted-foreground))' }}>
+                            <div className="flex flex-col items-center gap-2">
+                              <svg className="w-12 h-12 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" /></svg>
+                              <span>No Data</span>
+                            </div>
+                          </td>
                         </tr>
-                      ))}
+                      ) : (
+                        statsData?.invitees?.map((item: any, i: number) => (
+                          <tr key={i} style={{ height: 50 }}>
+                            <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                              <div className="cell">{item.userId}</div>
+                            </td>
+                            <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                              <div className="cell">{item.username}</div>
+                            </td>
+                            <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                              <div className="cell">{item.directInvitees || 0}</div>
+                            </td>
+                            <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                              <div className="cell">{item.teamSize || item.totalInvitees || 0}</div>
+                            </td>
+                          </tr>
+                        ))
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -292,14 +316,14 @@ const AgencyDashboard = () => {
       {/* ── Daily Tab ── */}
       {tab === 'Daily' && (
         <div className="space-y-2">
-          <div className="flex flex-col sm:flex-row sm:items-end gap-2 bg-card border border-border p-2 rounded-lg">
+          <div className="flex flex-col sm:flex-row sm:items-end gabg-card border border-border rounded-lg">
             <div className="flex-1">
               <SearchBar value={dailyUserId} onChange={setDailyUserId} onSearch={loadDaily} placeholder="Enter Agent User ID" loading={dailyLoading} storageKey="agency_daily_search" maxHistory={5} />
             </div>
             <div className="w-full sm:w-36">
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className={cn("w-full justify-start text-left font-normal text-xs h-7 px-2", !dailyDate && "text-muted-foreground")}>
+                  <Button variant="outline" className={cn("w-full justify-start text-left font-normal text-xs h-[26px] px-2 rounded-[5px]", !dailyDate && "text-muted-foreground")}>
                     <CalendarIcon className="mr-1 h-3 w-3" />
                     {dailyDate ? format(dailyDate, "MMM dd, yyyy") : "Date"}
                   </Button>
@@ -329,7 +353,7 @@ const AgencyDashboard = () => {
                   </div>
                 )}
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-3 ga">
                 {['level1', 'level2', 'level3'].map((lvl) => {
                   const s = dailyData[lvl];
                   return s ? (
@@ -353,59 +377,51 @@ const AgencyDashboard = () => {
       {/* ── Team Tab ── */}
       {tab === 'Team' && (
         <div className="space-y-2">
-          <div className="flex flex-wrap items-end gap-2 bg-card border border-border p-2 rounded-lg">
-            <div className="flex-1 min-w-[160px]">
-              <label className="text-[10px] font-medium text-muted-foreground uppercase mb-1 block">Agent ID</label>
-              <SearchBar value={teamAgentId} onChange={setTeamAgentId} onSearch={() => loadTeam(1)} placeholder="Agent ID" loading={teamLoading} storageKey="agency_team_search" maxHistory={5} hideButton />
-            </div>
-            <div className="w-[130px]">
-              <label className="text-[10px] font-medium text-muted-foreground uppercase mb-1 block">To Date *</label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className={cn("w-full justify-start text-left font-normal text-[11px] h-7 px-2", !teamToDate && "text-muted-foreground")}>
-                    <CalendarIcon className="mr-1 h-3 w-3" />
-                    {teamToDate ? format(teamToDate, "MMM dd, yyyy") : "Select"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar mode="single" selected={teamToDate} onSelect={setTeamToDate} initialFocus captionLayout="dropdown-buttons" fromYear={2024} toYear={2026} />
-                </PopoverContent>
-              </Popover>
-            </div>
-            <div className="w-[130px]">
-              <label className="text-[10px] font-medium text-muted-foreground uppercase mb-1 block">From Date</label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className={cn("w-full justify-start text-left font-normal text-[11px] h-7 px-2", !teamFromDate && "text-muted-foreground")}>
-                    <CalendarIcon className="mr-1 h-3 w-3" />
-                    {teamFromDate ? format(teamFromDate, "MMM dd, yyyy") : "Select"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar mode="single" selected={teamFromDate} onSelect={setTeamFromDate} initialFocus captionLayout="dropdown-buttons" fromYear={2024} toYear={2026} />
-                </PopoverContent>
-              </Popover>
-            </div>
-            <div className="w-[80px]">
-              <label className="text-[10px] font-medium text-muted-foreground uppercase mb-1 block">Tier</label>
-              <select value={teamTier} onChange={(e) => setTeamTier(e.target.value)} className="flex h-7 w-full rounded border border-input bg-background px-1 py-0.5 text-[11px]">
-                <option value="">All</option>
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-              </select>
-            </div>
-            <Button size="sm" onClick={() => loadTeam(1)} disabled={teamLoading} className="h-7 text-xs">Search</Button>
+          <div className="flex flex-wrap items-center gap-[10px] bg-card border border-border p-2.5 rounded-lg">
+            <label className="text-xs font-medium text-muted-foreground whitespace-nowrap">Agent ID</label>
+            <SearchBar value={teamAgentId} onChange={setTeamAgentId} onSearch={() => loadTeam(1)} placeholder="Agent ID" loading={teamLoading} storageKey="agency_team_search" maxHistory={5} hideButton />
+            <label className="text-xs font-medium text-muted-foreground whitespace-nowrap">To *</label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className={cn("w-[130px] justify-start text-left font-normal text-xs h-[26px] px-2 rounded-[5px]", !teamToDate && "text-muted-foreground")}>
+                  <CalendarIcon className="mr-1 h-3 w-3" />
+                  {teamToDate ? format(teamToDate, "MMM dd, yyyy") : "Select"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar mode="single" selected={teamToDate} onSelect={setTeamToDate} initialFocus captionLayout="dropdown-buttons" fromYear={2024} toYear={2026} />
+              </PopoverContent>
+            </Popover>
+            <label className="text-xs font-medium text-muted-foreground whitespace-nowrap">From</label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className={cn("w-[130px] justify-start text-left font-normal text-xs h-[26px] px-2 rounded-[5px]", !teamFromDate && "text-muted-foreground")}>
+                  <CalendarIcon className="mr-1 h-3 w-3" />
+                  {teamFromDate ? format(teamFromDate, "MMM dd, yyyy") : "Select"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar mode="single" selected={teamFromDate} onSelect={setTeamFromDate} initialFocus captionLayout="dropdown-buttons" fromYear={2024} toYear={2026} />
+              </PopoverContent>
+            </Popover>
+            <label className="text-xs font-medium text-muted-foreground whitespace-nowrap">Tier</label>
+            <select value={teamTier} onChange={(e) => setTeamTier(e.target.value)} className="w-[80px] h-[26px] rounded border border-input bg-background px-2 text-xs">
+              <option value="">All</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+            </select>
+            <Button size="sm" onClick={() => loadTeam(1)} disabled={teamLoading} className="h-[26px] text-xs rounded-[5px]">Search</Button>
           </div>
 
           {teamData?.aggregation && (
             <div className="space-y-2">
               <h3 className="text-xs font-semibold text-foreground">Aggregation</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 ga">
                 {['level1', 'level2', 'level3', 'total'].map((key) => {
                   const agg = teamData.aggregation[key];
                   return agg ? (
-                    <div key={key} className="bg-card border border-border p-2 rounded-lg">
+                    <div key={key} className="bg-card border border-border rounded-lg">
                       <h4 className="text-[10px] font-semibold text-foreground uppercase mb-1">{key.replace('level', 'Level ')}</h4>
                       {renderAggregation(agg)}
                     </div>
@@ -415,30 +431,58 @@ const AgencyDashboard = () => {
             </div>
           )}
 
-          {teamData?.items?.length > 0 && (
+          {teamData?.items && (
             <>
-              <div className="bg-card border border-border overflow-hidden rounded-lg">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-xs">
-                    <thead>
-                      <tr className="border-b border-border bg-secondary/30">
-                        <th className="text-left p-2 text-muted-foreground font-medium">User ID</th>
-                        <th className="text-left p-2 text-muted-foreground font-medium">Mobile</th>
-                        <th className="text-left p-2 text-muted-foreground font-medium">Tier</th>
-                        <th className="text-left p-2 text-muted-foreground font-medium">Total Deposit</th>
-                        <th className="text-left p-2 text-muted-foreground font-medium">Registered</th>
+              <div className="relative rounded" style={{ height: 445, border: '1px solid hsl(var(--border))' }}>
+                <div style={{ height: '100%', overflowX: 'auto', overflowY: 'auto' }}>
+                  <table className="el-table w-full" style={{ tableLayout: 'fixed', borderCollapse: 'collapse', minWidth: 800 }}>
+                    <colgroup>
+                      <col />
+                      <col />
+                      <col />
+                      <col />
+                      <col />
+                    </colgroup>
+                    <thead style={{ position: 'sticky', top: 0, zIndex: 2, backgroundColor: 'hsl(var(--card))' }}>
+                      <tr style={{ height: 50 }}>
+                        {['User ID', 'Mobile', 'Tier', 'Total Deposit', 'Registered'].map((label) => (
+                          <th key={label} style={{ textAlign: 'center', border: '1px solid hsl(var(--border))', padding: '2px 0', fontWeight: 400, fontSize: 14 }}>
+                            <div className="cell">{label}</div>
+                          </th>
+                        ))}
                       </tr>
                     </thead>
                     <tbody>
-                      {teamData.items.map((item: any, i: number) => (
-                        <tr key={i} className="border-b border-border last:border-0 hover:bg-secondary/20 transition-colors">
-                          <td className="p-2 text-foreground font-mono text-[10px]">{item.userId}</td>
-                          <td className="p-2 text-muted-foreground">{item.mobile || '—'}</td>
-                          <td className="p-2"><span className="px-1.5 py-0.5 text-[10px] font-medium rounded-sm bg-secondary text-foreground">L{item.tier}</span></td>
-                          <td className="p-2 text-primary font-medium">₹{(item.totalDeposit ?? 0).toLocaleString()}</td>
-                          <td className="p-2 text-muted-foreground">{new Date(item.registeredAt).toLocaleString()}</td>
+                      {teamData?.items?.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} style={{ textAlign: 'center', border: '1px solid hsl(var(--border))', padding: 50, color: 'hsl(var(--muted-foreground))' }}>
+                            <div className="flex flex-col items-center gap-2">
+                              <svg className="w-12 h-12 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" /></svg>
+                              <span>No Data</span>
+                            </div>
+                          </td>
                         </tr>
-                      ))}
+                      ) : (
+                        teamData.items.map((item: any, i: number) => (
+                          <tr key={i} style={{ height: 50 }}>
+                            <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                              <div className="cell">{item.userId}</div>
+                            </td>
+                            <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                              <div className="cell">{item.mobile || '—'}</div>
+                            </td>
+                            <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                              <div className="cell"><span className="px-1.5 py-0.5 text-[10px] font-medium rounded-sm bg-secondary text-foreground">L{item.tier}</span></div>
+                            </td>
+                            <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                              <div className="cell">₹{(item.totalDeposit ?? 0).toLocaleString()}</div>
+                            </td>
+                            <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                              <div className="cell">{new Date(item.registeredAt).toLocaleString()}</div>
+                            </td>
+                          </tr>
+                        ))
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -460,9 +504,9 @@ const AgencyDashboard = () => {
       {/* ── Config Tab ── */}
       {tab === 'Config' && (
         <div className="space-y-2">
-          <div className="flex items-center justify-between bg-card border border-border p-2 rounded-lg">
+          <div className="flex items-center justify-between bg-card border border-border rounded-lg">
             <h3 className="text-xs font-semibold text-foreground">Level Configurations</h3>
-            <div className="flex gap-2">
+            <div className="flex ga">
               <Button variant="outline" size="sm" onClick={loadConfigs} disabled={configLoading} className="h-7 text-xs"><RefreshCw className={`w-3 h-3 mr-1 ${configLoading ? 'animate-spin' : ''}`} />Refresh</Button>
               <Button variant="outline" size="sm" onClick={handleSeed} className="h-7 text-xs"><Plus className="w-3 h-3 mr-1" />Seed Defaults</Button>
             </div>
@@ -471,54 +515,78 @@ const AgencyDashboard = () => {
           {configLoading ? (
             <div className="flex justify-center py-8"><Loading size={20} /></div>
           ) : (
-            <div className="bg-card border border-border overflow-hidden rounded-lg">
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs">
-                  <thead>
-                    <tr className="border-b border-border bg-secondary/30">
-                      <th className="text-left p-2 text-muted-foreground font-medium">Level</th>
-                      <th className="text-left p-2 text-muted-foreground font-medium">Min Members</th>
-                      <th className="text-left p-2 text-muted-foreground font-medium">Min Bets (₹)</th>
-                      <th className="text-left p-2 text-muted-foreground font-medium">Min Deposit (₹)</th>
-                      <th className="text-left p-2 text-muted-foreground font-medium">L1 Rate</th>
-                      <th className="text-left p-2 text-muted-foreground font-medium">L2 Rate</th>
-                      <th className="text-left p-2 text-muted-foreground font-medium">L3 Rate</th>
-                      <th className="text-left p-2 text-muted-foreground font-medium">Action</th>
+            <div className="relative rounded" style={{ height: 445, border: '1px solid hsl(var(--border))' }}>
+              <div style={{ height: '100%', overflowX: 'auto', overflowY: 'auto' }}>
+                <table className="el-table w-full" style={{ tableLayout: 'fixed', borderCollapse: 'collapse', minWidth: 1100 }}>
+                  <colgroup>
+                    <col style={{ width: 80 }} />
+                    <col />
+                    <col />
+                    <col />
+                    <col />
+                    <col />
+                    <col />
+                    <col style={{ width: 120 }} />
+                  </colgroup>
+                  <thead style={{ position: 'sticky', top: 0, zIndex: 2, backgroundColor: 'hsl(var(--card))' }}>
+                    <tr style={{ height: 50 }}>
+                      {['Level', 'Min Members', 'Min Bets (₹)', 'Min Deposit (₹)', 'L1 Rate', 'L2 Rate', 'L3 Rate', 'Action'].map((label) => (
+                        <th key={label} style={{ textAlign: 'center', border: '1px solid hsl(var(--border))', padding: '2px 0', fontWeight: 400, fontSize: 14 }}>
+                          <div className="cell">{label}</div>
+                        </th>
+                      ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {configs.map((cfg) => (
-                      <tr key={cfg.level} className="border-b border-border last:border-0 hover:bg-secondary/20 transition-colors">
-                        {editingLevel === cfg.level ? (
-                          <>
-                            <td className="p-2 font-medium">{cfg.level}</td>
-                            <td className="p-2"><Input type="number" className="h-6 w-20 text-[10px]" value={editForm.minMembers} onChange={(e) => setEditForm({ ...editForm, minMembers: Number(e.target.value) })} /></td>
-                            <td className="p-2"><Input type="number" className="h-6 w-24 text-[10px]" value={editForm.minBets} onChange={(e) => setEditForm({ ...editForm, minBets: Number(e.target.value) })} /></td>
-                            <td className="p-2"><Input type="number" className="h-6 w-24 text-[10px]" value={editForm.minDeposit} onChange={(e) => setEditForm({ ...editForm, minDeposit: Number(e.target.value) })} /></td>
-                            <td className="p-2"><Input type="number" step="0.0001" className="h-6 w-20 text-[10px]" value={editForm.l1Rate} onChange={(e) => setEditForm({ ...editForm, l1Rate: Number(e.target.value) })} /></td>
-                            <td className="p-2"><Input type="number" step="0.0001" className="h-6 w-20 text-[10px]" value={editForm.l2Rate} onChange={(e) => setEditForm({ ...editForm, l2Rate: Number(e.target.value) })} /></td>
-                            <td className="p-2"><Input type="number" step="0.0001" className="h-6 w-20 text-[10px]" value={editForm.l3Rate} onChange={(e) => setEditForm({ ...editForm, l3Rate: Number(e.target.value) })} /></td>
-                            <td className="p-2">
-                              <div className="flex gap-1">
-                                <Button size="sm" variant="default" className="h-6 text-[10px] px-2" onClick={handleSaveConfig} disabled={configSaving}>{configSaving ? <Loading size={10} /> : <Save className="w-3 h-3" />}</Button>
-                                <Button size="sm" variant="ghost" className="h-6 text-[10px] px-2" onClick={() => setEditingLevel(null)}>Cancel</Button>
-                              </div>
-                            </td>
-                          </>
-                        ) : (
-                          <>
-                            <td className="p-2 font-medium">{cfg.level}</td>
-                            <td className="p-2">{cfg.minMembers}</td>
-                            <td className="p-2">₹{cfg.minBets?.toLocaleString()}</td>
-                            <td className="p-2">₹{cfg.minDeposit?.toLocaleString()}</td>
-                            <td className="p-2 font-mono">{(cfg.l1Rate * 100).toFixed(2)}%</td>
-                            <td className="p-2 font-mono">{(cfg.l2Rate * 100).toFixed(2)}%</td>
-                            <td className="p-2 font-mono">{(cfg.l3Rate * 100).toFixed(2)}%</td>
-                            <td className="p-2"><Button size="sm" variant="outline" className="h-6 text-[10px] px-2" onClick={() => startEdit(cfg)}>Edit</Button></td>
-                          </>
-                        )}
+                    {configs.length === 0 ? (
+                      <tr>
+                        <td colSpan={8} style={{ textAlign: 'center', border: '1px solid hsl(var(--border))', padding: 50, color: 'hsl(var(--muted-foreground))' }}>
+                          <div className="flex flex-col items-center gap-2">
+                            <svg className="w-12 h-12 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" /></svg>
+                            <span>No Data</span>
+                          </div>
+                        </td>
                       </tr>
-                    ))}
+                    ) : (
+                      configs.map((cfg) => (
+                        <tr key={cfg.level} style={{ height: 50 }}>
+                          {editingLevel === cfg.level ? (
+                            <>
+                              <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}><div className="cell">{cfg.level}</div></td>
+                              <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}><div className="cell"><Input type="number" className="h-6 w-20 text-[10px]" value={editForm.minMembers} onChange={(e) => setEditForm({ ...editForm, minMembers: Number(e.target.value) })} /></div></td>
+                              <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}><div className="cell"><Input type="number" className="h-6 w-24 text-[10px]" value={editForm.minBets} onChange={(e) => setEditForm({ ...editForm, minBets: Number(e.target.value) })} /></div></td>
+                              <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}><div className="cell"><Input type="number" className="h-6 w-24 text-[10px]" value={editForm.minDeposit} onChange={(e) => setEditForm({ ...editForm, minDeposit: Number(e.target.value) })} /></div></td>
+                              <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}><div className="cell"><Input type="number" step="0.0001" className="h-6 w-20 text-[10px]" value={editForm.l1Rate} onChange={(e) => setEditForm({ ...editForm, l1Rate: Number(e.target.value) })} /></div></td>
+                              <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}><div className="cell"><Input type="number" step="0.0001" className="h-6 w-20 text-[10px]" value={editForm.l2Rate} onChange={(e) => setEditForm({ ...editForm, l2Rate: Number(e.target.value) })} /></div></td>
+                              <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}><div className="cell"><Input type="number" step="0.0001" className="h-6 w-20 text-[10px]" value={editForm.l3Rate} onChange={(e) => setEditForm({ ...editForm, l3Rate: Number(e.target.value) })} /></div></td>
+                              <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                                <div className="cell">
+                                  <div className="flex gap-1 justify-center">
+                                    <Button size="sm" variant="default" className="h-6 text-[10px] px-2" onClick={handleSaveConfig} disabled={configSaving}>{configSaving ? <Loading size={10} /> : <Save className="w-3 h-3" />}</Button>
+                                    <Button size="sm" variant="ghost" className="h-6 text-[10px] px-2" onClick={() => setEditingLevel(null)}>Cancel</Button>
+                                  </div>
+                                </div>
+                              </td>
+                            </>
+                          ) : (
+                            <>
+                              <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}><div className="cell">{cfg.level}</div></td>
+                              <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}><div className="cell">{cfg.minMembers}</div></td>
+                              <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}><div className="cell">₹{cfg.minBets?.toLocaleString()}</div></td>
+                              <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}><div className="cell">₹{cfg.minDeposit?.toLocaleString()}</div></td>
+                              <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}><div className="cell">{(cfg.l1Rate * 100).toFixed(2)}%</div></td>
+                              <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}><div className="cell">{(cfg.l2Rate * 100).toFixed(2)}%</div></td>
+                              <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}><div className="cell">{(cfg.l3Rate * 100).toFixed(2)}%</div></td>
+                              <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                                <div className="cell">
+                                  <Button size="sm" variant="outline" className="h-6 text-[10px] px-2" onClick={() => startEdit(cfg)}>Edit</Button>
+                                </div>
+                              </td>
+                            </>
+                          )}
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
