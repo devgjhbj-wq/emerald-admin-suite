@@ -3,6 +3,8 @@ export interface DepositItem {
   userId: number | string;
   orderId: string;
   amount: number;
+  receivedAmount?: number;
+  currency?: string;
   status: 'PENDING' | 'SUCCESS' | 'FAILED' | 'REFUNDED' | 'EXPIRED';
   channelName: string;
   gatewayOrderNo?: string;
@@ -26,5 +28,6 @@ export interface DepositFilters {
   dateFrom?: string;
   dateTo?: string;
   userId?: string;
+  mobile?: string;
   orderId?: string;
 }

@@ -1,7 +1,6 @@
-
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { fetchDeposits, approveDeposit, setAuthToken } from '@/lib/api';
+import { fetchDeposits, approveDeposit, fetchDepositConfig, updateDepositConfig, setAuthToken } from '@/lib/api';
 import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
 import Loading from '@/components/Loading';
@@ -28,8 +27,8 @@ const Deposits = () => {
   // Search state
   const [userId, setUserId] = useState('');
   const [phone, setPhone] = useState('');
+  const [orderId, setOrderId] = useState('');
   const [status, setStatus] = useState('');
-  const [createdDate, setCreatedDate] = useState<Date>();
   const [dateFrom, setDateFrom] = useState<Date>();
   const [dateTo, setDateTo] = useState<Date>();
   
@@ -40,6 +39,58 @@ const Deposits = () => {
   const [pageInput, setPageInput] = useState('1');
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
   const [approvingId, setApprovingId] = useState<string | null>(null);
+
+  // Tab state
+  const [tab, setTab] = useState<'orders' | 'config'>('orders');
+
+  // Config state
+  const [config, setConfig] = useState<any[]>([]);
+  const [configLoading, setConfigLoading] = useState(false);
+  const [configSaving, setConfigSaving] = useState(false);
+  const [editConfig, setEditConfig] = useState<Record<string, { isActive: boolean; minAmount: number; maxAmount: number; exchangeRate: number }>>({});
+
+  const loadConfig = useCallback(async () => {
+    setAuthToken(token);
+    setConfigLoading(true);
+    try {
+      const res = await fetchDepositConfig();
+      const data = res.data?.data || [];
+      setConfig(data);
+      const edits: Record<string, any> = {};
+      data.forEach((ch: any) => {
+        edits[ch.channel] = { isActive: ch.isActive, minAmount: ch.minAmount, maxAmount: ch.maxAmount, exchangeRate: ch.exchangeRate ?? 1 };
+      });
+      setEditConfig(edits);
+    } catch (err: any) {
+      toast.error(err.response?.data?.msg || 'Failed to load config');
+    } finally {
+      setConfigLoading(false);
+    }
+  }, [token]);
+
+  const handleSaveConfig = async (channel: string) => {
+    setAuthToken(token);
+    setConfigSaving(true);
+    try {
+      const data = editConfig[channel];
+      const payload: Record<string, any> = {};
+      if (data.isActive !== config.find((c: any) => c.channel === channel)?.isActive) payload.isActive = data.isActive;
+      if (data.minAmount !== config.find((c: any) => c.channel === channel)?.minAmount) payload.minAmount = data.minAmount;
+      if (data.maxAmount !== config.find((c: any) => c.channel === channel)?.maxAmount) payload.maxAmount = data.maxAmount;
+      if (data.exchangeRate !== config.find((c: any) => c.channel === channel)?.exchangeRate) payload.exchangeRate = data.exchangeRate;
+      const res = await updateDepositConfig(channel, payload);
+      setConfig(prev => prev.map(c => c.channel === channel ? res.data?.data : c));
+      toast.success('Channel updated');
+    } catch (err: any) {
+      toast.error(err.response?.data?.msg || 'Failed to update channel');
+    } finally {
+      setConfigSaving(false);
+    }
+  };
+
+  useEffect(() => {
+    if (tab === 'config') loadConfig();
+  }, [tab]);
 
   const handleApprove = async (orderIdToApprove: string) => {
     setAuthToken(token);
@@ -71,6 +122,11 @@ const Deposits = () => {
       };
       const q = userId.trim();
       if (q) filters.userId = q;
+      const mob = phone.trim();
+      const oid = orderId.trim();
+      if (q) filters.userId = q;
+      if (mob) filters.mobile = mob;
+      if (oid) filters.orderId = oid;
       if (status && status !== 'all') filters.status = status;
       if (dateFrom) filters.dateFrom = format(dateFrom, 'yyyy-MM-dd');
       if (dateTo) filters.dateTo = format(dateTo, 'yyyy-MM-dd');
@@ -85,7 +141,18 @@ const Deposits = () => {
     } finally {
       setLoading(false);
     }
-  }, [token, userId, status, dateFrom, dateTo]);
+  }, [token, userId, phone, orderId, status, dateFrom, dateTo]);
+
+  const handleSearchClick = async (p = 1) => {
+    const q = userId.trim();
+    const mob = phone.trim();
+    const oid = orderId.trim();
+    if (!q && !mob && !oid && !status && !dateFrom && !dateTo) {
+      toast.error('Select at least one filter');
+      return;
+    }
+    await handleSearch(p);
+  };
 
   const handlePageGo = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
@@ -101,8 +168,8 @@ const Deposits = () => {
   const handleReset = () => {
     setUserId('');
     setPhone('');
+    setOrderId('');
     setStatus('');
-    setCreatedDate(undefined);
     setDateFrom(undefined);
     setDateTo(undefined);
     setResults(null);
@@ -110,6 +177,12 @@ const Deposits = () => {
   };
 
   const totalPages = results?.total ? Math.ceil(results.total / (results.limit || 50)) : 0;
+
+  const handleToday = () => {
+    const today = new Date();
+    setDateFrom(today);
+    setDateTo(today);
+  };
 
   const renderTable = (data: DepositResponse) => {
     const showEmpty = !data?.items?.length;
@@ -141,11 +214,13 @@ const Deposits = () => {
         )}
 
         <div style={{ height: '100%', overflowX: 'auto', overflowY: 'auto' }}>
-          <table className="el-table w-full" style={{ tableLayout: 'fixed', borderCollapse: 'collapse', minWidth: 1050 }}>
+          <table className="el-table w-full" style={{ tableLayout: 'fixed', borderCollapse: 'collapse', minWidth: 1250 }}>
             <colgroup>
               <col style={{ width: 95 }} />
               <col style={{ width: 150 }} />
               <col />
+              <col style={{ width: 100 }} />
+              <col style={{ width: 80 }} />
               <col style={{ width: 100 }} />
               <col style={{ width: 100 }} />
               <col style={{ width: 130 }} />
@@ -156,7 +231,7 @@ const Deposits = () => {
             </colgroup>
             <thead style={{ position: 'sticky', top: 0, zIndex: 2, backgroundColor: 'hsl(var(--card))' }}>
               <tr style={{ height: 50 }}>
-                {['User ID', 'Order No.', 'Amount', 'Status', 'Channel', 'Gateway No.', 'Note', 'Created At', 'Updated At', 'Action'].map((label) => (
+                {['User ID', 'Order No.', 'Amount', 'Recvd Amt', 'Currency', 'Status', 'Channel', 'Gateway No.', 'Note', 'Created At', 'Updated At', 'Action'].map((label) => (
                   <th key={label} style={{ textAlign: 'center', border: '1px solid hsl(var(--border))', padding: '2px 0', fontWeight: 400, fontSize: 14 }}>
                     <div className="cell">{label}</div>
                   </th>
@@ -166,7 +241,7 @@ const Deposits = () => {
             <tbody>
               {showEmpty ? (
                 <tr>
-                  <td colSpan={10} style={{ textAlign: 'center', border: '1px solid hsl(var(--border))', padding: 50, color: 'hsl(var(--muted-foreground))' }}>
+                  <td colSpan={12} style={{ textAlign: 'center', border: '1px solid hsl(var(--border))', padding: 50, color: 'hsl(var(--muted-foreground))' }}>
                     <div className="flex flex-col items-center gap-2">
                       <svg className="w-12 h-12 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" /></svg>
                       <span>No Data</span>
@@ -184,6 +259,12 @@ const Deposits = () => {
                     </td>
                     <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
                       <div className="cell">₹{d.amount?.toLocaleString()}</div>
+                    </td>
+                    <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                      <div className="cell">{d.receivedAmount != null ? `₹${d.receivedAmount.toLocaleString()}` : '—'}</div>
+                    </td>
+                    <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                      <div className="cell">{d.currency || 'INR'}</div>
                     </td>
                     <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
                       <div className="cell">
@@ -241,136 +322,159 @@ const Deposits = () => {
 
   return (
     <PageContainer>
+      {/* Tab Bar */}
+      <div className="flex items-center gap-0 bg-card border border-border rounded px-1" style={{ height: 34 }}>
+        {(['orders', 'config'] as const).map((t) => (
+          <button
+            key={t}
+            onClick={() => setTab(t)}
+            className={`px-2 text-xs font-medium rounded transition-all capitalize ${
+              tab === t
+                ? 'bg-[rgb(32,143,255)] text-white border border-[rgb(32,143,255)]'
+                : 'text-muted-foreground border border-transparent hover:text-foreground hover:border-border'
+            }`}
+            style={{ height: 26, lineHeight: '26px', marginRight: 5 }}
+          >
+            {t}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'orders' && (
+      <>
+
       <SearchHeader>
-        <span className="inline-flex items-center shrink-0">
-          <label className="text-xs font-medium text-foreground whitespace-nowrap mr-[3px]">User ID</label>
-          <Input
-            value={userId}
-            onChange={(e) => setUserId(e.target.value)}
-            placeholder="User ID"
-            className="w-[180px] h-[26px] text-xs px-1.5"
-          />
-        </span>
+        <div className="form-grid w-full" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+          <div>
+            <div className="text-[11px] text-muted-foreground font-medium mb-0.5">User ID</div>
+            <Input
+              value={userId}
+              onChange={(e) => setUserId(e.target.value)}
+              placeholder="User ID"
+              className="w-full h-[26px] text-xs px-1.5"
+            />
+          </div>
 
-        <span className="inline-flex items-center shrink-0">
-          <label className="text-xs font-medium text-foreground whitespace-nowrap mr-[3px]">Phone</label>
-          <Input
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="Phone Number"
-            className="w-[180px] h-[26px] text-xs px-1.5"
-          />
-        </span>
+          <div>
+            <div className="text-[11px] text-muted-foreground font-medium mb-0.5">Phone</div>
+            <Input
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="Phone Number"
+              className="w-full h-[26px] text-xs px-1.5"
+            />
+          </div>
 
-        <span className="inline-flex items-center shrink-0">
-          <label className="text-xs font-medium text-foreground whitespace-nowrap mr-[3px]">Status</label>
-          <select
-            className="w-[180px] h-[26px] rounded border border-input bg-background px-1.5 text-xs"
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-          >
-            <option value="">All</option>
-            <option value="PENDING">Pending</option>
-            <option value="SUCCESS">Success</option>
-            <option value="FAILED">Failed</option>
-          </select>
-        </span>
+          <div>
+            <div className="text-[11px] text-muted-foreground font-medium mb-0.5">Order ID</div>
+            <Input
+              value={orderId}
+              onChange={(e) => setOrderId(e.target.value)}
+              placeholder="Order ID"
+              className="w-full h-[26px] text-xs px-1.5"
+            />
+          </div>
 
-        <span className="inline-flex items-center shrink-0 gap-[5px]">
-          <label className="text-xs font-medium text-foreground whitespace-nowrap">Created</label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className="w-[216px] justify-start text-left font-normal text-xs h-[26px] px-2 rounded-[5px]"
-              >
-                <CalendarIcon className="mr-1 h-3 w-3" />
-                {createdDate ? format(createdDate, "MMM dd, yyyy") : "Created Date"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={createdDate}
-                onSelect={setCreatedDate}
-                initialFocus
-                captionLayout="dropdown-buttons"
-                fromYear={2024}
-                toYear={2026}
-              />
-            </PopoverContent>
-          </Popover>
-        </span>
+          <div>
+            <div className="text-[11px] text-muted-foreground font-medium mb-0.5">Status</div>
+            <select
+              className="w-full h-[26px] rounded border border-input bg-background px-1.5 text-xs"
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+            >
+              <option value="">All</option>
+              <option value="PENDING">Pending</option>
+              <option value="SUCCESS">Success</option>
+              <option value="FAILED">Failed</option>
+              <option value="REFUNDED">Refunded</option>
+              <option value="EXPIRED">Expired</option>
+            </select>
+          </div>
 
-        <span className="inline-flex items-center shrink-0 gap-[5px]">
-          <label className="text-xs font-medium text-foreground whitespace-nowrap">Date Range</label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className="w-[156px] justify-start text-left font-normal text-xs h-[26px] px-2 rounded-[5px]"
-              >
-                <CalendarIcon className="mr-1 h-3 w-3" />
-                {dateFrom ? format(dateFrom, "MMM dd, yyyy") : "From"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={dateFrom}
-                onSelect={setDateFrom}
-                initialFocus
-                captionLayout="dropdown-buttons"
-                fromYear={2024}
-                toYear={2026}
-              />
-            </PopoverContent>
-          </Popover>
-          <span className="text-foreground text-xs">to</span>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className="w-[156px] justify-start text-left font-normal text-xs h-[26px] px-2 rounded-[5px]"
-              >
-                <CalendarIcon className="mr-1 h-3 w-3" />
-                {dateTo ? format(dateTo, "MMM dd, yyyy") : "To"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={dateTo}
-                onSelect={setDateTo}
-                initialFocus
-                captionLayout="dropdown-buttons"
-                fromYear={2024}
-                toYear={2026}
-              />
-            </PopoverContent>
-          </Popover>
-        </span>
+          <div>
+            <div className="text-[11px] text-muted-foreground font-medium mb-0.5">From</div>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start text-left font-normal text-xs h-[26px] px-2 rounded-[5px]"
+                >
+                  <CalendarIcon className="mr-1 h-3 w-3" />
+                  {dateFrom ? format(dateFrom, "MMM dd, yyyy") : "From"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={dateFrom}
+                  onSelect={setDateFrom}
+                  initialFocus
+                  captionLayout="dropdown-buttons"
+                  fromYear={2024}
+                  toYear={2026}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
 
-        <span className="inline-flex items-center shrink-0">
-          <Button
-            onClick={() => handleSearch(1)}
-            disabled={loading}
-            size="sm"
-            className="h-[26px] px-2.5 text-xs rounded-[5px]"
-            style={{ backgroundColor: 'rgb(32,143,255)', color: '#fff' }}
-          >
-            {loading ? <Loading size={10} /> : null}
-            Search
-          </Button>
-          <Button
-            onClick={handleReset}
-            variant="outline"
-            size="sm"
-            className="h-[26px] px-2.5 text-xs rounded-[5px]"
-          >
-            Reset
-          </Button>
-        </span>
+          <div>
+            <div className="text-[11px] text-muted-foreground font-medium mb-0.5">To</div>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start text-left font-normal text-xs h-[26px] px-2 rounded-[5px]"
+                >
+                  <CalendarIcon className="mr-1 h-3 w-3" />
+                  {dateTo ? format(dateTo, "MMM dd, yyyy") : "To"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={dateTo}
+                  onSelect={setDateTo}
+                  initialFocus
+                  captionLayout="dropdown-buttons"
+                  fromYear={2024}
+                  toYear={2026}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          <div className="flex items-end">
+            <Button
+              onClick={handleToday}
+              size="sm"
+              className="h-[26px] px-2.5 text-xs rounded-[5px]"
+              style={{ backgroundColor: 'rgb(32,143,255)', color: '#fff' }}
+            >
+              Today
+            </Button>
+          </div>
+
+          <div className="flex items-end gap-2">
+            <Button
+               onClick={() => handleSearchClick(1)}
+              disabled={loading}
+              size="sm"
+              className="h-[26px] px-2.5 text-xs rounded-[5px]"
+              style={{ backgroundColor: 'rgb(32,143,255)', color: '#fff' }}
+            >
+              {loading ? <Loading size={10} /> : null}
+              Search
+            </Button>
+            <Button
+              onClick={handleReset}
+              variant="outline"
+              size="sm"
+              className="h-[26px] px-2.5 text-xs rounded-[5px]"
+            >
+              Reset
+            </Button>
+          </div>
+        </div>
       </SearchHeader>
 
       {results && (
@@ -378,6 +482,112 @@ const Deposits = () => {
           {renderTable(results)}
           <Pagination page={page} totalPages={totalPages} total={results.total} loading={loading} onPageChange={(p) => handleSearch(p)} />
         </>
+      )}
+      </>
+      )}
+
+      {tab === 'config' && (
+        <div className="bg-card border border-border p-4 rounded-lg space-y-4">
+          <h3 className="text-sm font-semibold">Deposit Channel Configuration</h3>
+          {configLoading ? (
+            <div className="flex justify-center py-8"><Loading size={20} /></div>
+          ) : (
+            <div className="space-y-4">
+              {config.map((ch: any) => (
+                <div key={ch.channel} className="border border-border rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <span className="text-xs font-bold text-foreground uppercase">{ch.name}</span>
+                      <span className="text-[10px] text-muted-foreground ml-2">({ch.channel})</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-muted-foreground">{ch.description}</span>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-4 gap-4 mb-3">
+                    <div>
+                      <label className="text-[10px] text-muted-foreground">Active</label>
+                      <div className="flex bg-secondary/30 p-0.5 rounded-md border border-border h-[26px] w-fit mt-0.5">
+                        <button
+                          onClick={() => setEditConfig(prev => ({
+                            ...prev,
+                            [ch.channel]: { ...prev[ch.channel], isActive: true }
+                          }))}
+                          className={`px-2.5 text-[11px] font-medium rounded transition-colors h-full ${
+                            editConfig[ch.channel]?.isActive
+                              ? 'bg-[rgb(32,143,255)] text-white shadow-sm'
+                              : 'text-muted-foreground hover:text-foreground'
+                          }`}
+                        >
+                          Enabled
+                        </button>
+                        <button
+                          onClick={() => setEditConfig(prev => ({
+                            ...prev,
+                            [ch.channel]: { ...prev[ch.channel], isActive: false }
+                          }))}
+                          className={`px-2.5 text-[11px] font-medium rounded transition-colors h-full ${
+                            !editConfig[ch.channel]?.isActive
+                              ? 'bg-[rgb(32,143,255)] text-white shadow-sm'
+                              : 'text-muted-foreground hover:text-foreground'
+                          }`}
+                        >
+                          Disabled
+                        </button>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-muted-foreground">Min Amount</label>
+                      <input
+                        type="number"
+                        className="flex h-7 w-full rounded border border-input bg-background px-2 py-0.5 text-xs mt-0.5"
+                        value={editConfig[ch.channel]?.minAmount ?? ''}
+                        onChange={(e) => setEditConfig(prev => ({
+                          ...prev,
+                          [ch.channel]: { ...prev[ch.channel], minAmount: Number(e.target.value) }
+                        }))}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-muted-foreground">Max Amount</label>
+                      <input
+                        type="number"
+                        className="flex h-7 w-full rounded border border-input bg-background px-2 py-0.5 text-xs mt-0.5"
+                        value={editConfig[ch.channel]?.maxAmount ?? ''}
+                        onChange={(e) => setEditConfig(prev => ({
+                          ...prev,
+                          [ch.channel]: { ...prev[ch.channel], maxAmount: Number(e.target.value) }
+                        }))}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-muted-foreground">Exchange Rate</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        className="flex h-7 w-full rounded border border-input bg-background px-2 py-0.5 text-xs mt-0.5"
+                        value={editConfig[ch.channel]?.exchangeRate ?? 1}
+                        onChange={(e) => setEditConfig(prev => ({
+                          ...prev,
+                          [ch.channel]: { ...prev[ch.channel], exchangeRate: Number(e.target.value) }
+                        }))}
+                      />
+                    </div>
+                  </div>
+                  <Button
+                    onClick={() => handleSaveConfig(ch.channel)}
+                    disabled={configSaving}
+                    size="sm"
+                    className="h-7 text-xs"
+                  >
+                    {configSaving && <Loading size={12} className="mr-1" />}
+                    Save
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       )}
     </PageContainer>
   );

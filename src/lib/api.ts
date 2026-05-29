@@ -79,18 +79,19 @@ export const fetchTransactions = (userId: string, page = 1, limit = 25) => {
  * Status options: PENDING, SUCCESS, FAILED, REFUNDED, EXPIRED
  * Default limit: 50, Max limit: 100
  */
-export const fetchDeposits = (params?: { userId?: string; status?: string; dateFrom?: string; dateTo?: string; page?: number; limit?: number }) => {
+export const fetchDeposits = (params?: { userId?: string; mobile?: string; status?: string; dateFrom?: string; dateTo?: string; page?: number; limit?: number; orderId?: string }) => {
   const query = new URLSearchParams();
   if (params?.userId) query.set('userId', params.userId);
+  if (params?.mobile) query.set('mobile', params.mobile);
+  if (params?.orderId) query.set('orderId', params.orderId);
   if (params?.status) query.set('status', params.status);
-  if (params?.dateFrom) query.set('dateFrom', params.dateFrom); // YYYY-MM-DD format
-  if (params?.dateTo) query.set('dateTo', params.dateTo); // YYYY-MM-DD format
+  if (params?.dateFrom) query.set('dateFrom', params.dateFrom);
+  if (params?.dateTo) query.set('dateTo', params.dateTo);
   const page = params?.page || 1;
-  const limit = Math.min(params?.limit || 50, 100); // Default 50, Max 100
+  const limit = Math.min(params?.limit || 50, 100);
   query.set('page', String(page));
   query.set('limit', String(limit));
-  const url = `/api/admin/deposits?${query.toString()}`;
-  return api.get(url);
+  return api.get(`/api/admin/deposits?${query.toString()}`);
 };
 
 /**
@@ -114,6 +115,11 @@ export const approveDeposit = (orderId: string) => {
   }
   return api.post('/api/admin/deposits/approve', { orderId });
 };
+
+export const fetchDepositConfig = () => api.get('/api/admin/deposit-config');
+
+export const updateDepositConfig = (channel: string, data: { isActive?: boolean; minAmount?: number; maxAmount?: number; name?: string; description?: string; sortOrder?: number }) =>
+  api.put(`/api/admin/deposit-config/${channel}`, data);
 
 // Withdrawals
 /**

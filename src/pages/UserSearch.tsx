@@ -1,29 +1,26 @@
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { searchUser, updateUserStatus, updateUserPayment, fetchUserPaymentMethods, updateUserPaymentMethodById, setAuthToken } from '@/lib/api';
+import { searchUser, updateUserStatus, updateUserPayment, fetchUserPaymentMethods, updateUserPaymentMethodById, searchUsersByIp, searchUserByMobile, setAuthToken } from '@/lib/api';
 import { toast } from 'sonner';
-import LastUpdated from '@/components/LastUpdated';
 import Loading from '@/components/Loading';
 import UserTurnover from '@/components/UserTurnover';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Users, Banknote, Search, ShieldAlert, Globe, Smartphone, CreditCard } from 'lucide-react';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter } from '@/components/ui/sheet';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
+import { Search, ShieldAlert } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { SearchHeader } from '@/components/PageContainer';
 
-const SectionCard = ({ title, icon: TitleIcon, accentBorder, children }: {
+const SectionCard = ({ title, children, rightAction }: {
   title: string;
-  icon: any;
-  accentBorder: string;
   children: React.ReactNode;
+  rightAction?: React.ReactNode;
 }) => (
-  <div className={cn("bg-card border border-border rounded-lg shadow-sm overflow-hidden", accentBorder)}>
+  <div className="bg-card border border-border rounded-lg shadow-sm overflow-hidden">
     <div className="px-4 py-2.5 border-b border-border flex items-center justify-between">
-      <div className="flex items-center gap-2">
-        <TitleIcon className="w-4 h-4" />
-        <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">{title}</h3>
-      </div>
+      <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">{title}</h3>
+      {rightAction && <div className="flex items-center gap-2">{rightAction}</div>}
     </div>
     <div className="p-4">
       {children}
@@ -31,11 +28,24 @@ const SectionCard = ({ title, icon: TitleIcon, accentBorder, children }: {
   </div>
 );
 
-const StatRow = ({ label, value }: { label: string; value: any }) => (
-  <div className="flex items-center justify-between py-1.5 border-b border-border/40 last:border-b-0">
-    <span className="text-[11px] text-muted-foreground">{label}</span>
-    <span className="text-xs font-bold text-foreground">{value}</span>
+const FormField = ({ label, value }: { label: string; value: React.ReactNode }) => (
+  <div>
+    <div className="text-[11px] text-muted-foreground font-medium mb-0.5">{label}</div>
+    <div className="text-xs font-bold text-foreground">{value}</div>
   </div>
+);
+
+const SearchButton = ({ onClick, disabled, loading }: { onClick: () => void; disabled?: boolean; loading?: boolean }) => (
+  <Button
+    onClick={onClick}
+    disabled={disabled || loading}
+    size="sm"
+    className="h-[26px] px-2.5 text-xs rounded-[5px] gap-1"
+    style={{ backgroundColor: 'rgb(32,143,255)', color: '#fff' }}
+  >
+    {loading ? <Loading size={14} /> : <Search className="w-3.5 h-3.5" />}
+    Search
+  </Button>
 );
 
 const UserSearch = () => {
@@ -59,13 +69,20 @@ const UserSearch = () => {
   const [accountHolder, setAccountHolder] = useState('');
   const [upiId, setUpiId] = useState('');
   const [rplId, setRplId] = useState('');
+  const [mobile, setMobile] = useState('');
+  const [ipUsers, setIpUsers] = useState<any[] | null>(null);
+  const [ipLoading, setIpLoading] = useState(false);
+
   const handleSearch = async () => {
-    if (!userId.trim()) return;
+    const id = userId.trim();
+    const mob = mobile.trim();
+    if (!id && mob.length !== 10) { toast.error('Enter User ID or 10-digit mobile'); return; }
     setAuthToken(token);
     setLoading(true);
     setResult(null);
+    setIpUsers(null);
     try {
-      const res = await searchUser(userId.trim());
+      const res = id ? await searchUser(id) : await searchUserByMobile(mob);
       setResult(res.data);
       setUpdatedAt(new Date());
       setBankName('');
@@ -80,6 +97,21 @@ const UserSearch = () => {
       setResult(null);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSearchSameIp = async () => {
+    const ip = result?.lastIp;
+    if (!ip) { toast.error('IP address not available'); return; }
+    setAuthToken(token);
+    setIpLoading(true);
+    try {
+      const res = await searchUsersByIp(ip);
+      setIpUsers(res.data.users || []);
+    } catch (err: any) {
+      toast.error(err.response?.data?.msg || 'Failed to load IP users');
+    } finally {
+      setIpLoading(false);
     }
   };
 
@@ -130,185 +162,207 @@ const UserSearch = () => {
     }
   };
 
-  const handleSearchSameIp = async () => {
-    toast.error('IP address not available from user search');
-  };
-
-  const { user, account, paymentMethods } = result || {};
+  const { user, account, paymentMethods, lastIp } = result || {};
 
   return (
     <div className="space-y-4">
       <SearchHeader>
-        <label className="text-xs font-medium text-foreground whitespace-nowrap mr-[3px]">User ID</label>
-        <Input
-          value={userId}
-          onChange={(e) => setUserId(e.target.value)}
-          placeholder="Enter User ID"
-          className="w-[180px] h-[26px] text-xs px-1.5"
-          onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-        />
-        <Button
-          onClick={handleSearch}
-          disabled={loading || !userId.trim()}
-          size="sm"
-          className="h-[26px] px-2.5 text-xs rounded-[5px] gap-1"
-          style={{ backgroundColor: 'rgb(32,143,255)', color: '#fff' }}
-        >
-          <Search className="w-3.5 h-3.5" />
-          Go
-        </Button>
-        <LastUpdated timestamp={updatedAt} onRefresh={handleSearch} loading={loading} compact />
+        <div className="form-grid w-full" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+          <div>
+            <div className="text-[11px] text-muted-foreground font-medium mb-0.5">User ID</div>
+            <Input
+              value={userId}
+              onChange={(e) => setUserId(e.target.value)}
+              placeholder="Enter User ID"
+              className="w-full h-[26px] text-xs px-1.5"
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+            />
+          </div>
+          <div>
+            <div className="text-[11px] text-muted-foreground font-medium mb-0.5">Mobile</div>
+            <Input
+              value={mobile}
+              onChange={(e) => setMobile(e.target.value.replace(/\D/g, '').slice(0, 10))}
+              placeholder="10-digit mobile"
+              className="w-full h-[26px] text-xs px-1.5"
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+            />
+          </div>
+          <div className="flex items-end">
+            <SearchButton onClick={handleSearch} disabled={!userId.trim() && mobile.length !== 10} loading={loading} />
+          </div>
+        </div>
       </SearchHeader>
 
       {result && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="space-y-4">
           {/* User Profile */}
-          {user && (
-            <SectionCard title="User Profile" icon={Users} accentBorder="border-r-[3px] border-r-[rgb(32,143,255)]">
-              <StatRow label="User ID" value={user.userId} />
-              <StatRow label="Mobile" value={user.mobile} />
-              <StatRow label="Admin" value={user.admin ? 'Yes' : 'No'} />
-              <StatRow label="Created" value={new Date(user.createdAt).toLocaleString()} />
-              <StatRow label="Updated" value={new Date(user.updatedAt).toLocaleString()} />
-            </SectionCard>
-          )}
+          <SectionCard title="User Profile">
+            <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
+              <FormField label="User ID" value={user?.userId ?? '—'} />
+              <FormField label="Mobile" value={user?.mobile ?? '—'} />
+              <FormField label="Admin" value={user ? (user.admin ? 'Yes' : 'No') : '—'} />
+              <FormField label="Created" value={user?.createdAt ? new Date(user.createdAt).toLocaleString() : '—'} />
+              <FormField label="Updated" value={user?.updatedAt ? new Date(user.updatedAt).toLocaleString() : '—'} />
+            </div>
+          </SectionCard>
 
           {/* Account */}
-          {account && (
-            <SectionCard
-              title="Account"
-              icon={Banknote}
-              accentBorder="border-r-[3px] border-r-emerald-500"
-            >
-              <div className="flex items-center justify-end gap-2 mb-2">
-                <Button variant="outline" size="sm" className="h-7 text-[10px] px-2" onClick={() => setStatusDialogOpen(true)}>
-                  <ShieldAlert className="w-3 h-3 mr-1" />
-                  Change Status
-                </Button>
-              </div>
-              <StatRow label="Balance" value={`₹${(account.balance ?? 0).toLocaleString()}`} />
-              <StatRow label="Withdrawable" value={`₹${(account.withdrawable ?? 0).toLocaleString()}`} />
-              <StatRow label="Total Deposits" value={`₹${(account.totalDeposits ?? 0).toLocaleString()}`} />
-              <StatRow label="Total Withdrawals" value={`₹${(account.totalWithdrawals ?? 0).toLocaleString()}`} />
-              <StatRow
+          <SectionCard
+            title="Account"
+            rightAction={
+              <Button
+                size="sm"
+                className="h-[26px] px-2.5 text-xs rounded-[5px] gap-1"
+                style={{ backgroundColor: 'rgb(32,143,255)', color: '#fff' }}
+                onClick={() => setStatusDialogOpen(true)}
+              >
+                <ShieldAlert className="w-3.5 h-3.5" />
+                Change Status
+              </Button>
+            }
+          >
+            <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
+              <FormField label="Balance" value={account ? `₹${(account.balance ?? 0).toLocaleString()}` : '—'} />
+              <FormField label="Withdrawable" value={account ? `₹${(account.withdrawable ?? 0).toLocaleString()}` : '—'} />
+              <FormField label="Total Deposits" value={account ? `₹${(account.totalDeposits ?? 0).toLocaleString()}` : '—'} />
+              <FormField label="Total Withdrawals" value={account ? `₹${(account.totalWithdrawals ?? 0).toLocaleString()}` : '—'} />
+              <FormField
                 label="Status"
                 value={
-                  <span className={cn("px-1.5 py-0.5 text-[10px] font-semibold rounded",
-                    account.status === 'active' ? 'bg-emerald-500/15 text-emerald-400' :
-                    account.status === 'suspended' ? 'bg-amber-500/15 text-amber-400' :
-                    'bg-rose-500/15 text-rose-400'
-                  )}>
-                    {account.status}
-                  </span>
+                  account ? (
+                    <span className={cn("px-1.5 py-0.5 text-[11px] font-semibold rounded",
+                      account.status === 'active' ? 'bg-emerald-500/15 text-emerald-400' :
+                      account.status === 'suspended' ? 'bg-amber-500/15 text-amber-400' :
+                      'bg-rose-500/15 text-rose-400'
+                    )}>
+                      {account.status}
+                    </span>
+                  ) : '—'
                 }
               />
-              {account.statusRemark && <StatRow label="Status Remark" value={account.statusRemark} />}
-              <StatRow label="VIP Level" value={account.vipLevel || '—'} />
-              <StatRow label="Withdraw Daily Limit" value={`₹${(account.withdrawDailyLimit ?? 0).toLocaleString()}`} />
-              <StatRow label="Turnover Requirement" value={`₹${(account.turnover_requirement ?? 0).toLocaleString()}`} />
-              <StatRow label="Turnover Completed" value={`₹${(account.total_turnover_completed ?? 0).toLocaleString()}`} />
-              <StatRow label="Currency" value={account.currency || 'INR'} />
-              <StatRow label="Game Member" value={account.gameMemberCreated ? 'Created' : 'Not Created'} />
-              <StatRow label="First Deposit Bonus" value={account.firstDepositBonusGiven ? 'Given' : 'Not Given'} />
-              <StatRow label="Created" value={account.createdAt ? new Date(account.createdAt).toLocaleString() : '—'} />
-              <StatRow label="Updated" value={account.updatedAt ? new Date(account.updatedAt).toLocaleString() : '—'} />
-            </SectionCard>
+              {account?.statusRemark && <FormField label="Status Remark" value={account.statusRemark} />}
+              <FormField label="VIP Level" value={account?.vipLevel || '—'} />
+              <FormField label="Withdraw Daily Limit" value={account ? `₹${(account.withdrawDailyLimit ?? 0).toLocaleString()}` : '—'} />
+              <FormField label="Turnover Requirement" value={account ? `₹${(account.turnover_requirement ?? 0).toLocaleString()}` : '—'} />
+              <FormField label="Turnover Completed" value={account ? `₹${(account.total_turnover_completed ?? 0).toLocaleString()}` : '—'} />
+              <FormField label="Currency" value={account?.currency || 'INR'} />
+              <FormField label="Game Member" value={account ? (account.gameMemberCreated ? 'Created' : 'Not Created') : '—'} />
+              <FormField label="First Deposit Bonus" value={account ? (account.firstDepositBonusGiven ? 'Given' : 'Not Given') : '—'} />
+              <FormField label="Created" value={account?.createdAt ? new Date(account.createdAt).toLocaleString() : '—'} />
+              <FormField label="Updated" value={account?.updatedAt ? new Date(account.updatedAt).toLocaleString() : '—'} />
+            </div>
+          </SectionCard>
+
+          {/* Same IP Users */}
+          <SectionCard
+            title="Same IP Users"
+            rightAction={
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button
+                    size="sm"
+                    className="h-[26px] px-2.5 text-xs rounded-[5px] gap-1"
+                    style={{ backgroundColor: 'rgb(32,143,255)', color: '#fff' }}
+                    disabled={!lastIp}
+                    onClick={() => { handleSearchSameIp(); }}
+                  >
+                    <Search className="w-3.5 h-3.5" />
+                    View Users
+                  </Button>
+                </SheetTrigger>
+                  <SheetContent side="right" className="w-[500px] sm:max-w-[500px]">
+                  <SheetHeader>
+                    <SheetTitle className="text-sm">Users Sharing IP: {lastIp}</SheetTitle>
+                  </SheetHeader>
+                  <div className="mt-4">
+                    {ipLoading ? (
+                      <div className="flex items-center justify-center py-8"><Loading size={20} /></div>
+                    ) : ipUsers && ipUsers.length > 0 ? (
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="text-xs text-foreground">User ID</TableHead>
+                            <TableHead className="text-xs text-foreground">Mobile</TableHead>
+                            <TableHead className="text-xs text-foreground">Created</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {ipUsers.map((u: any) => (
+                            <TableRow key={u.userId}>
+                              <TableCell className="text-xs text-foreground">{u.userId}</TableCell>
+                              <TableCell className="text-xs text-foreground">{u.mobile}</TableCell>
+                              <TableCell className="text-xs text-foreground">{new Date(u.createdAt).toLocaleDateString()}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    ) : (
+                      <div className="flex items-center justify-center py-8"><span className="text-xs text-foreground">No users found</span></div>
+                    )}
+                  </div>
+                </SheetContent>
+              </Sheet>
+            }
+          >
+            <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
+              <FormField label="IP Address" value={lastIp || '—'} />
+              <FormField label="Users Sharing IP" value={result?.sameIpUsers ?? '—'} />
+            </div>
+          </SectionCard>
+
+          {/* Payment Methods */}
+          <SectionCard
+            title="Payment Methods"
+            rightAction={
+              <Button
+                size="sm"
+                className="h-[26px] px-2.5 text-xs rounded-[5px] gap-1"
+                style={{ backgroundColor: 'rgb(32,143,255)', color: '#fff' }}
+                onClick={() => {
+                  setPaymentType('BANK');
+                  setBankName(paymentMethods?.bank?.bankName || '');
+                  setBankCode(paymentMethods?.bank?.ifsc || '');
+                  setAccountNumber(paymentMethods?.bank?.accountNo || '');
+                  setAccountHolder(paymentMethods?.holderName || '');
+                  setUpiId(paymentMethods?.upi?.address || '');
+                  setRplId(paymentMethods?.upay?.address || '');
+                  setPaymentDialogOpen(true);
+                }}
+              >
+                Edit
+              </Button>
+            }
+          >
+            <div className="flex items-center gap-1.5 mb-3">
+              {(paymentMethods?.bank?.bankName) && <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-400">BANK</span>}
+              {(paymentMethods?.upi?.address) && <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400">UPI</span>}
+              {(paymentMethods?.upay?.address) && <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-purple-500/15 text-purple-400">UPAY</span>}
+              {paymentMethods?.isDefault && <span className="text-[9px] text-muted-foreground">(Default)</span>}
+            </div>
+            <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
+              <FormField label="Bank Name" value={paymentMethods?.bank?.bankName || '—'} />
+              <FormField label="IFSC" value={paymentMethods?.bank?.ifsc || '—'} />
+              <FormField label="Account No" value={paymentMethods?.bank?.accountNo || '—'} />
+              <FormField label="UPI ID" value={paymentMethods?.upi?.address || '—'} />
+              <FormField label="RPL ID" value={paymentMethods?.upay?.address || '—'} />
+              <FormField label="Holder Name" value={paymentMethods?.holderName || '—'} />
+            </div>
+          </SectionCard>
+
+          {user?.userId && (
+            <UserTurnover userId={user.userId} />
           )}
         </div>
       )}
 
-      {/* Same IP Users */}
-      {result?.sameIpUsers !== undefined && result?.sameIpUsers > 0 && (
-        <SectionCard title="Same IP Users" icon={Globe} accentBorder="border-r-[3px] border-r-amber-500">
-          <span className="text-[11px] text-muted-foreground">
-            <span className="font-bold text-foreground">{result.sameIpUsers}</span> other user{result.sameIpUsers !== 1 ? 's' : ''} sharing same IP
-          </span>
-        </SectionCard>
-      )}
-
-      {/* Payment Methods */}
-      {paymentMethods && (
-        <SectionCard title="Payment Methods" icon={Banknote} accentBorder="border-r-[3px] border-r-[rgb(32,143,255)]">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              {paymentMethods.bank?.bankName && (
-                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-400">BANK</span>
-              )}
-              {paymentMethods.upi?.address && (
-                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400">UPI</span>
-              )}
-              {paymentMethods.upay?.address && (
-                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-purple-500/15 text-purple-400">UPAY</span>
-              )}
-              {paymentMethods.isDefault && <span className="text-[9px] text-muted-foreground">(Default)</span>}
-            </div>
-          </div>
-
-          {paymentMethods.bank?.bankName && (
-            <div className="mb-3 pb-3 border-b border-border/60 last:border-b-0 last:mb-0 last:pb-0">
-              <div className="flex items-center gap-1.5 mb-2">
-                <Banknote className="w-3.5 h-3.5 text-[rgb(32,143,255)]" />
-                <span className="text-[10px] font-bold text-foreground uppercase">Bank</span>
-              </div>
-              <StatRow label="Bank Name" value={paymentMethods.bank.bankName} />
-              <StatRow label="IFSC" value={paymentMethods.bank.ifsc || '—'} />
-              <StatRow label="Account No" value={paymentMethods.bank.accountNo || '—'} />
-            </div>
-          )}
-
-          {paymentMethods.upi?.address && (
-            <div className="mb-3 pb-3 border-b border-border/60 last:border-b-0 last:mb-0 last:pb-0">
-              <div className="flex items-center gap-1.5 mb-2">
-                <Smartphone className="w-3.5 h-3.5 text-emerald-500" />
-                <span className="text-[10px] font-bold text-foreground uppercase">UPI</span>
-              </div>
-              <StatRow label="UPI ID" value={paymentMethods.upi.address} />
-            </div>
-          )}
-
-          {paymentMethods.upay?.address && (
-            <div className="mb-3 pb-3 border-b border-border/60 last:border-b-0 last:mb-0 last:pb-0">
-              <div className="flex items-center gap-1.5 mb-2">
-                <CreditCard className="w-3.5 h-3.5 text-purple-500" />
-                <span className="text-[10px] font-bold text-foreground uppercase">UPAY</span>
-              </div>
-              <StatRow label="RPL ID" value={paymentMethods.upay.address} />
-            </div>
-          )}
-
-          {paymentMethods.holderName && (
-            <StatRow label="Holder Name" value={paymentMethods.holderName} />
-          )}
-
-          <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border/60">
-            <Button variant="outline" size="sm" className="h-7 text-[10px] px-2" onClick={() => {
-              setPaymentType('BANK');
-              setBankName(paymentMethods.bank?.bankName || '');
-              setBankCode(paymentMethods.bank?.ifsc || '');
-              setAccountNumber(paymentMethods.bank?.accountNo || '');
-              setAccountHolder(paymentMethods.holderName || '');
-              setUpiId(paymentMethods.upi?.address || '');
-              setRplId(paymentMethods.upay?.address || '');
-              setPaymentDialogOpen(true);
-            }}>
-              Edit
-            </Button>
-          </div>
-        </SectionCard>
-      )}
-
-      {user?.userId && (
-        <UserTurnover userId={user.userId} />
-      )}
-
-
-
-      <Dialog open={statusDialogOpen} onOpenChange={setStatusDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="text-sm">Change User Status</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
+      {/* Status Sheet */}
+      <Sheet open={statusDialogOpen} onOpenChange={setStatusDialogOpen}>
+        <SheetContent side="right" className="w-[400px] sm:max-w-[400px]">
+          <SheetHeader>
+            <SheetTitle className="text-sm">Change User Status</SheetTitle>
+          </SheetHeader>
+          <div className="mt-4 space-y-3">
             <div className="space-y-1">
               <label className="text-xs font-medium">Status</label>
               <select
@@ -332,22 +386,23 @@ const UserSearch = () => {
               />
             </div>
           </div>
-          <DialogFooter>
+          <SheetFooter className="mt-6">
             <Button variant="outline" size="sm" onClick={() => setStatusDialogOpen(false)}>Cancel</Button>
             <Button size="sm" onClick={handleStatusChange} disabled={statusLoading}>
               {statusLoading && <Loading size={14} />}
               Save
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
 
-      <Dialog open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="text-sm">Edit Payment Details</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
+      {/* Payment Sheet */}
+      <Sheet open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen}>
+        <SheetContent side="right" className="w-[400px] sm:max-w-[400px]">
+          <SheetHeader>
+            <SheetTitle className="text-sm">Edit Payment Details</SheetTitle>
+          </SheetHeader>
+          <div className="mt-4 space-y-3">
             <div className="space-y-1">
               <label className="text-xs font-medium">Payment Type</label>
               <select
@@ -393,15 +448,16 @@ const UserSearch = () => {
               <Input value={accountHolder} onChange={(e) => setAccountHolder(e.target.value)} placeholder="e.g., John Doe" />
             </div>
           </div>
-          <DialogFooter>
+          <SheetFooter className="mt-6">
             <Button variant="outline" size="sm" onClick={() => setPaymentDialogOpen(false)}>Cancel</Button>
             <Button size="sm" onClick={handlePaymentUpdate} disabled={paymentLoading}>
               {paymentLoading && <Loading size={14} />}
               Save
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+
     </div>
   );
 };
