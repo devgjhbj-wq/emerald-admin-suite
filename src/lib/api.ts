@@ -1,4 +1,5 @@
 import axios from 'axios';
+import type { TransactionFilters } from '@/types/transaction';
 
 const BASE_URL = 'https://backend-ledger-0ra6.onrender.com';
 
@@ -59,17 +60,23 @@ export const updateUserPaymentMethodById = (id: string, data: Record<string, any
 
 // Transactions
 /**
- * Fetch user transactions (paginated)
- * @param userId User ID
- * @param page Page number (default: 1)
- * @param limit Items per page (default: 25, max: 100)
+ * Fetch transaction ledger entries with filters
+ * At least one of userId, orderId, or transactionId is required.
+ * @param params Optional filters
  */
-export const fetchTransactions = (userId: string, page = 1, limit = 25) => {
-  if (!userId || userId.trim().length === 0) {
-    return Promise.reject(new Error('User ID is required'));
-  }
-  const validatedLimit = Math.min(limit, 100); // Max 100
-  return api.get(`/api/admin/transactions?userId=${userId}&page=${page}&limit=${validatedLimit}`);
+export const fetchTransactions = (params?: TransactionFilters) => {
+  const query = new URLSearchParams();
+  if (params?.userId) query.set('userId', params.userId);
+  if (params?.orderId) query.set('orderId', params.orderId);
+  if (params?.transactionId) query.set('transactionId', params.transactionId);
+  if (params?.type) query.set('type', params.type);
+  if (params?.dateFrom) query.set('dateFrom', params.dateFrom);
+  if (params?.dateTo) query.set('dateTo', params.dateTo);
+  const page = params?.page || 1;
+  const limit = Math.min(params?.limit || 25, 100);
+  query.set('page', String(page));
+  query.set('limit', String(limit));
+  return api.get(`/api/admin/transactions?${query.toString()}`);
 };
 
 // Deposits
