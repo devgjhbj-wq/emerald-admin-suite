@@ -40,10 +40,10 @@ const SearchButton = ({ onClick, disabled, loading }: { onClick: () => void; dis
     onClick={onClick}
     disabled={disabled || loading}
     size="sm"
-    className="h-[26px] px-2.5 text-xs rounded-[5px] gap-1"
+    className="h-[34px] px-4 text-sm rounded-[5px] gap-1.5"
     style={{ backgroundColor: 'rgb(32,143,255)', color: '#fff' }}
   >
-    {loading ? <Loading size={14} /> : <Search className="w-3.5 h-3.5" />}
+    {loading ? <Loading size={14} /> : <Search className="w-4 h-4" />}
     Search
   </Button>
 );
@@ -167,24 +167,24 @@ const UserSearch = () => {
   return (
     <div className="space-y-4">
       <SearchHeader>
-        <div className="form-grid w-full" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+        <div className="form-grid w-full" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '14px' }}>
           <div>
-            <div className="text-[11px] text-muted-foreground font-medium mb-0.5">User ID</div>
+            <div className="text-xs text-muted-foreground font-medium mb-1">User ID</div>
             <Input
               value={userId}
               onChange={(e) => setUserId(e.target.value)}
               placeholder="Enter User ID"
-              className="w-full h-[26px] text-xs px-1.5"
+              className="w-full h-[34px] text-sm px-2"
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
             />
           </div>
           <div>
-            <div className="text-[11px] text-muted-foreground font-medium mb-0.5">Mobile</div>
+            <div className="text-xs text-muted-foreground font-medium mb-1">Mobile</div>
             <Input
               value={mobile}
               onChange={(e) => setMobile(e.target.value.replace(/\D/g, '').slice(0, 10))}
               placeholder="10-digit mobile"
-              className="w-full h-[26px] text-xs px-1.5"
+              className="w-full h-[34px] text-sm px-2"
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
             />
           </div>

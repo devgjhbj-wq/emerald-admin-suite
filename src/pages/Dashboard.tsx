@@ -91,21 +91,21 @@ const Dashboard = () => {
   return (
     <PageContainer>
       <SearchHeader>
-        <div className="form-grid w-full" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+        <div className="form-grid w-full" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '14px' }}>
           <div>
-            <div className="text-[11px] text-muted-foreground font-medium mb-0.5">Period</div>
-            <div className="flex bg-secondary/30 p-0.5 rounded-md border border-border h-[26px] w-fit">
-              <button onClick={() => setPeriod('today')} className={cn("px-3 text-xs font-medium rounded transition-colors h-full", period === 'today' ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}>Today</button>
-              <button onClick={() => setPeriod('month')} className={cn("px-3 text-xs font-medium rounded transition-colors h-full", period === 'month' ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}>This Month</button>
-              <button onClick={() => setPeriod('custom')} className={cn("px-3 text-xs font-medium rounded transition-colors h-full", period === 'custom' ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}>By Date</button>
+            <div className="text-xs text-muted-foreground font-medium mb-1">Period</div>
+            <div className="flex bg-secondary/30 p-0.5 rounded-md border border-border h-[34px] w-fit">
+              <button onClick={() => setPeriod('today')} className={cn("px-3 text-sm font-medium rounded transition-colors h-full", period === 'today' ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}>Today</button>
+              <button onClick={() => setPeriod('month')} className={cn("px-3 text-sm font-medium rounded transition-colors h-full", period === 'month' ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}>This Month</button>
+              <button onClick={() => setPeriod('custom')} className={cn("px-3 text-sm font-medium rounded transition-colors h-full", period === 'custom' ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}>By Date</button>
             </div>
           </div>
           {period === 'custom' && (
             <div>
-              <div className="text-[11px] text-muted-foreground font-medium mb-0.5">Date</div>
+              <div className="text-xs text-muted-foreground font-medium mb-1">Date</div>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-[26px] rounded-[5px] text-xs font-normal px-2.5 w-full justify-start">
+                  <Button variant="outline" className="h-[34px] rounded-[5px] text-sm font-normal px-3 w-full justify-start">
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {selectedDate ? format(selectedDate, "PPP") : <span>Pick a date</span>}
                   </Button>
@@ -116,8 +116,8 @@ const Dashboard = () => {
               </Popover>
             </div>
           )}
-          <div className="flex items-end gap-2">
-            <Button onClick={handleSearch} disabled={loading} size="sm" className="h-[26px] px-2.5 rounded-[5px] gap-1 text-xs" style={{ backgroundColor: 'rgb(32,143,255)', color: '#fff' }}>
+          <div className="flex items-end gap-3">
+            <Button onClick={handleSearch} disabled={loading} size="sm" className="h-[34px] px-4 rounded-[5px] gap-1.5 text-sm" style={{ backgroundColor: 'rgb(32,143,255)', color: '#fff' }}>
               <Search className="w-4 h-4" /> Search
             </Button>
             <LastUpdated timestamp={updatedAt} onRefresh={handleSearch} loading={loading} compact />

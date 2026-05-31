@@ -344,41 +344,41 @@ const Deposits = () => {
       <>
 
       <SearchHeader>
-        <div className="form-grid w-full" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+        <div className="form-grid w-full" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '14px' }}>
           <div>
-            <div className="text-[11px] text-muted-foreground font-medium mb-0.5">User ID</div>
+            <div className="text-xs text-muted-foreground font-medium mb-1">User ID</div>
             <Input
               value={userId}
               onChange={(e) => setUserId(e.target.value)}
               placeholder="User ID"
-              className="w-full h-[26px] text-xs px-1.5"
+              className="w-full h-[34px] text-sm px-2"
             />
           </div>
 
           <div>
-            <div className="text-[11px] text-muted-foreground font-medium mb-0.5">Phone</div>
+            <div className="text-xs text-muted-foreground font-medium mb-1">Phone</div>
             <Input
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="Phone Number"
-              className="w-full h-[26px] text-xs px-1.5"
+              className="w-full h-[34px] text-sm px-2"
             />
           </div>
 
           <div>
-            <div className="text-[11px] text-muted-foreground font-medium mb-0.5">Order ID</div>
+            <div className="text-xs text-muted-foreground font-medium mb-1">Order ID</div>
             <Input
               value={orderId}
               onChange={(e) => setOrderId(e.target.value)}
               placeholder="Order ID"
-              className="w-full h-[26px] text-xs px-1.5"
+              className="w-full h-[34px] text-sm px-2"
             />
           </div>
 
           <div>
-            <div className="text-[11px] text-muted-foreground font-medium mb-0.5">Status</div>
+            <div className="text-xs text-muted-foreground font-medium mb-1">Status</div>
             <select
-              className="w-full h-[26px] rounded border border-input bg-background px-1.5 text-xs"
+              className="w-full h-[34px] rounded border border-input bg-background px-2 text-sm"
               value={status}
               onChange={(e) => setStatus(e.target.value)}
             >
@@ -392,14 +392,14 @@ const Deposits = () => {
           </div>
 
           <div>
-            <div className="text-[11px] text-muted-foreground font-medium mb-0.5">From</div>
+            <div className="text-xs text-muted-foreground font-medium mb-1">From</div>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
-                  className="w-full justify-start text-left font-normal text-xs h-[26px] px-2 rounded-[5px]"
+                  className="w-full justify-start text-left font-normal text-sm h-[34px] px-3 rounded-[5px]"
                 >
-                  <CalendarIcon className="mr-1 h-3 w-3" />
+                  <CalendarIcon className="mr-1.5 h-4 w-4" />
                   {dateFrom ? format(dateFrom, "MMM dd, yyyy") : "From"}
                 </Button>
               </PopoverTrigger>
@@ -418,14 +418,14 @@ const Deposits = () => {
           </div>
 
           <div>
-            <div className="text-[11px] text-muted-foreground font-medium mb-0.5">To</div>
+            <div className="text-xs text-muted-foreground font-medium mb-1">To</div>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
-                  className="w-full justify-start text-left font-normal text-xs h-[26px] px-2 rounded-[5px]"
+                  className="w-full justify-start text-left font-normal text-sm h-[34px] px-3 rounded-[5px]"
                 >
-                  <CalendarIcon className="mr-1 h-3 w-3" />
+                  <CalendarIcon className="mr-1.5 h-4 w-4" />
                   {dateTo ? format(dateTo, "MMM dd, yyyy") : "To"}
                 </Button>
               </PopoverTrigger>
@@ -447,29 +447,29 @@ const Deposits = () => {
             <Button
               onClick={handleToday}
               size="sm"
-              className="h-[26px] px-2.5 text-xs rounded-[5px]"
+              className="h-[34px] px-3 text-sm rounded-[5px]"
               style={{ backgroundColor: 'rgb(32,143,255)', color: '#fff' }}
             >
               Today
             </Button>
           </div>
 
-          <div className="flex items-end gap-2">
+          <div className="flex items-end gap-3">
             <Button
-               onClick={() => handleSearchClick(1)}
+              onClick={() => handleSearchClick(1)}
               disabled={loading}
               size="sm"
-              className="h-[26px] px-2.5 text-xs rounded-[5px]"
+              className="h-[34px] px-4 text-sm rounded-[5px]"
               style={{ backgroundColor: 'rgb(32,143,255)', color: '#fff' }}
             >
-              {loading ? <Loading size={10} /> : null}
+              {loading ? <Loading size={14} /> : null}
               Search
             </Button>
             <Button
               onClick={handleReset}
               variant="outline"
               size="sm"
-              className="h-[26px] px-2.5 text-xs rounded-[5px]"
+              className="h-[34px] px-4 text-sm rounded-[5px]"
             >
               Reset
             </Button>
