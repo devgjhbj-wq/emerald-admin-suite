@@ -285,11 +285,12 @@ const Withdrawals = () => {
         )}
 
         <div style={{ height: '100%', overflowX: 'auto', overflowY: 'auto' }}>
-          <table className="el-table" style={{ tableLayout: 'fixed', borderCollapse: 'collapse', minWidth: 1680 }}>
+          <table className="el-table" style={{ tableLayout: 'fixed', borderCollapse: 'collapse', minWidth: 1770 }}>
             <colgroup>
               <col style={{ width: 95 }} />
               <col style={{ width: 160 }} />
               <col style={{ width: 100 }} />
+              <col style={{ width: 80 }} />
               <col style={{ width: 80 }} />
               <col style={{ width: 90 }} />
               <col style={{ width: 250 }} />
@@ -303,7 +304,7 @@ const Withdrawals = () => {
             </colgroup>
             <thead style={{ position: 'sticky', top: 0, zIndex: 2, backgroundColor: 'hsl(var(--card))' }}>
               <tr style={{ height: 50 }}>
-                {['User ID', 'Order ID', 'Amount', 'Charge', 'Pay Method', 'Payment Details', 'Channel', 'Gateway No.', 'Status', 'Note', 'Created At', 'Updated At', 'Action'].map((label) => (
+                {['User ID', 'Order ID', 'Amount', 'Currency', 'Charge', 'Pay Method', 'Payment Details', 'Channel', 'Gateway No.', 'Status', 'Note', 'Created At', 'Updated At', 'Action'].map((label) => (
                   <th key={label} style={{ textAlign: 'center', border: '1px solid hsl(var(--border))', padding: '2px 0', fontWeight: 400, fontSize: 14 }}>
                     <div className="cell">{label}</div>
                   </th>
@@ -313,7 +314,7 @@ const Withdrawals = () => {
             <tbody>
               {showEmpty ? (
                 <tr>
-                  <td colSpan={13} style={{ textAlign: 'center', border: '1px solid hsl(var(--border))', padding: 50, color: 'hsl(var(--muted-foreground))', overflow: 'hidden' }}>
+                  <td colSpan={14} style={{ textAlign: 'center', border: '1px solid hsl(var(--border))', padding: 50, color: 'hsl(var(--muted-foreground))', overflow: 'hidden' }}>
                     <div className="flex flex-col items-center gap-2">
                       <svg className="w-12 h-12 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" /></svg>
                       <span>No Data</span>
@@ -331,6 +332,9 @@ const Withdrawals = () => {
                     </td>
                     <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
                       <div className="cell">₹{d.amount?.toLocaleString()}</div>
+                    </td>
+                    <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
+                      <div className="cell">{d.currency || 'INR'}</div>
                     </td>
                     <td style={{ border: '1px solid hsl(var(--border))', padding: '2px 0', textAlign: 'center' }}>
                       <div className="cell" style={{ color: 'hsl(var(--destructive))' }}>{d.charge ? `₹${Number(d.charge).toFixed(2)}` : '—'}</div>
@@ -364,6 +368,17 @@ const Withdrawals = () => {
                           <div style={{ lineHeight: 1.4 }}>
                             <span style={{ color: 'hsl(var(--muted-foreground))' }}>RPL: </span>
                             <span style={{ fontFamily: 'monospace' }}>{d.paymentDetails.rplId}</span>
+                            <br />
+                            <span style={{ color: 'hsl(var(--muted-foreground))' }}>Name: </span>
+                            <span>{d.paymentDetails.holderName}</span>
+                          </div>
+                        ) : d.paymentMethod === 'BANK' && d.paymentDetails?.accountNo ? (
+                          <div style={{ lineHeight: 1.4 }}>
+                            <span style={{ color: 'hsl(var(--muted-foreground))' }}>A/C: </span>
+                            <span style={{ fontFamily: 'monospace' }}>{d.paymentDetails.accountNo}</span>
+                            <br />
+                            <span style={{ color: 'hsl(var(--muted-foreground))' }}>IFSC: </span>
+                            <span style={{ fontFamily: 'monospace' }}>{d.paymentDetails.ifsc || '-'}</span>
                             <br />
                             <span style={{ color: 'hsl(var(--muted-foreground))' }}>Name: </span>
                             <span>{d.paymentDetails.holderName}</span>
@@ -489,134 +504,141 @@ const Withdrawals = () => {
       {tab === 'orders' && (
       <>
       <SearchHeader>
-        <span className="inline-flex items-center shrink-0">
-          <label className="text-xs font-medium text-foreground whitespace-nowrap mr-[3px]">User ID</label>
-          <Input
-            value={userId}
-            onChange={(e) => setUserId(e.target.value)}
-            placeholder="User ID"
-            className="w-[180px] h-[26px] text-xs px-1.5"
-            onKeyDown={(e) => e.key === 'Enter' && loadByUserId(1)}
-          />
-        </span>
+        <div className="form-grid w-full" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '14px' }}>
+          <div>
+            <div className="text-xs text-muted-foreground font-medium mb-1">User ID</div>
+            <Input
+              value={userId}
+              onChange={(e) => setUserId(e.target.value)}
+              placeholder="User ID"
+              className="w-full h-[34px] text-sm px-2"
+              onKeyDown={(e) => e.key === 'Enter' && loadByUserId(1)}
+            />
+          </div>
 
-        <span className="inline-flex items-center shrink-0">
-          <label className="text-xs font-medium text-foreground whitespace-nowrap mr-[3px]">Order ID</label>
-          <Input
-            value={orderId}
-            onChange={(e) => setOrderId(e.target.value)}
-            placeholder="Order ID"
-            className="w-[180px] h-[26px] text-xs px-1.5"
-            onKeyDown={(e) => e.key === 'Enter' && loadByOrderId()}
-          />
-        </span>
+          <div>
+            <div className="text-xs text-muted-foreground font-medium mb-1">Order ID</div>
+            <Input
+              value={orderId}
+              onChange={(e) => setOrderId(e.target.value)}
+              placeholder="Order ID"
+              className="w-full h-[34px] text-sm px-2"
+              onKeyDown={(e) => e.key === 'Enter' && loadByOrderId()}
+            />
+          </div>
 
-        <span className="inline-flex items-center shrink-0">
-          <label className="text-xs font-medium text-foreground whitespace-nowrap mr-[3px]">Status</label>
-          <select
-            className="w-[200px] h-[26px] rounded border border-input bg-background px-1.5 text-xs"
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-          >
-            <option value="">All Status</option>
-            <option value="PENDING">PENDING</option>
-            <option value="AUDITING">AUDITING</option>
-            <option value="SUCCESS">SUCCESS</option>
-            <option value="FAILED">FAILED</option>
-            <option value="CANCELLED">CANCELLED</option>
-          </select>
-        </span>
+          <div>
+            <div className="text-xs text-muted-foreground font-medium mb-1">Status</div>
+            <select
+              className="w-full h-[34px] rounded border border-input bg-background px-2 text-sm"
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+            >
+              <option value="">All Status</option>
+              <option value="PENDING">PENDING</option>
+              <option value="AUDITING">AUDITING</option>
+              <option value="SUCCESS">SUCCESS</option>
+              <option value="FAILED">FAILED</option>
+              <option value="CANCELLED">CANCELLED</option>
+            </select>
+          </div>
 
-        <span className="inline-flex items-center shrink-0">
-          <label className="text-xs font-medium text-foreground whitespace-nowrap mr-[3px]">Charge</label>
-          <select
-            className="w-[200px] h-[26px] rounded border border-input bg-background px-1.5 text-xs"
-            value={chargeFrom}
-            onChange={(e) => setChargeFrom(e.target.value as 'user' | 'platform')}
-          >
-            <option value="user">User</option>
-            <option value="platform">Platform</option>
-          </select>
-        </span>
+          <div>
+            <div className="text-xs text-muted-foreground font-medium mb-1">Charge</div>
+            <select
+              className="w-full h-[34px] rounded border border-input bg-background px-2 text-sm"
+              value={chargeFrom}
+              onChange={(e) => setChargeFrom(e.target.value as 'user' | 'platform')}
+            >
+              <option value="user">User</option>
+              <option value="platform">Platform</option>
+            </select>
+          </div>
 
-        <span className="inline-flex items-center shrink-0 gap-[5px]">
-          <label className="text-xs font-medium text-foreground whitespace-nowrap">Date</label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className="w-[155px] justify-start text-left font-normal text-xs h-[26px] px-2 rounded-[5px]"
-              >
-                <CalendarIcon className="mr-1 h-3 w-3 shrink-0" />
-                <span className="truncate">{dateFrom ? format(dateFrom, "MMM dd, yyyy") : "From"}</span>
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar 
-                mode="single" 
-                selected={dateFrom} 
-                onSelect={setDateFrom} 
-                initialFocus 
-                captionLayout="dropdown-buttons"
-                fromYear={2024}
-                toYear={2026}
-              />
-            </PopoverContent>
-          </Popover>
-          <span className="text-foreground text-xs">to</span>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className="w-[155px] justify-start text-left font-normal text-xs h-[26px] px-2 rounded-[5px]"
-              >
-                <CalendarIcon className="mr-1 h-3 w-3 shrink-0" />
-                <span className="truncate">{dateTo ? format(dateTo, "MMM dd, yyyy") : "To"}</span>
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar 
-                mode="single" 
-                selected={dateTo} 
-                onSelect={setDateTo} 
-                initialFocus 
-                captionLayout="dropdown-buttons"
-                fromYear={2024}
-                toYear={2026}
-              />
-            </PopoverContent>
-          </Popover>
-          <div className="w-[10px]" />
-          <Button 
-            onClick={handleToday}
-            size="sm"
-            className="h-[22px] px-2 text-[10px] rounded-[5px]"
-            style={{ backgroundColor: 'rgb(32,143,255)', color: '#fff' }}
-          >
-            Today
-          </Button>
-        </span>
+          <div>
+            <div className="text-xs text-muted-foreground font-medium mb-1">From</div>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start text-left font-normal text-sm h-[34px] px-3 rounded-[5px]"
+                >
+                  <CalendarIcon className="mr-1.5 h-4 w-4" />
+                  {dateFrom ? format(dateFrom, "MMM dd, yyyy") : "From"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={dateFrom}
+                  onSelect={setDateFrom}
+                  initialFocus
+                  captionLayout="dropdown-buttons"
+                  fromYear={2024}
+                  toYear={2026}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
 
-        <span className="inline-flex items-center shrink-0">
-          <Button 
-            onClick={handleClear}
-            size="sm"
-            className="h-[22px] px-2 text-[10px] rounded-[5px]"
-            style={{ backgroundColor: 'rgb(32,143,255)', color: '#fff' }}
-          >
-            Reset
-          </Button>
-          <Button 
-            onClick={() => loadGlobalSearch(1)} 
-            disabled={loading} 
-            size="sm"
-            className="h-[26px] px-2.5 gap-1 text-xs rounded-[5px] ml-[10px]"
-            style={{ backgroundColor: 'rgb(32,143,255)', color: '#fff' }}
-          >
-            {loading && lastSearchType === 'global' ? <Loading size={12} /> : null}
-            Global Search
-          </Button>
-        </span>
+          <div>
+            <div className="text-xs text-muted-foreground font-medium mb-1">To</div>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start text-left font-normal text-sm h-[34px] px-3 rounded-[5px]"
+                >
+                  <CalendarIcon className="mr-1.5 h-4 w-4" />
+                  {dateTo ? format(dateTo, "MMM dd, yyyy") : "To"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={dateTo}
+                  onSelect={setDateTo}
+                  initialFocus
+                  captionLayout="dropdown-buttons"
+                  fromYear={2024}
+                  toYear={2026}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          <div className="flex items-end">
+            <Button
+              onClick={handleToday}
+              size="sm"
+              className="h-[34px] px-3 text-sm rounded-[5px]"
+              style={{ backgroundColor: 'rgb(32,143,255)', color: '#fff' }}
+            >
+              Today
+            </Button>
+          </div>
+
+          <div className="flex items-end gap-3">
+            <Button
+              onClick={() => loadGlobalSearch(1)}
+              disabled={loading}
+              size="sm"
+              className="h-[34px] px-4 text-sm rounded-[5px] gap-1.5"
+              style={{ backgroundColor: 'rgb(32,143,255)', color: '#fff' }}
+            >
+              {loading && lastSearchType === 'global' ? <Loading size={14} /> : null}
+              Search
+            </Button>
+            <Button
+              onClick={handleClear}
+              variant="outline"
+              size="sm"
+              className="h-[34px] px-4 text-sm rounded-[5px]"
+            >
+              Reset
+            </Button>
+          </div>
+        </div>
       </SearchHeader>
 
       {results && (

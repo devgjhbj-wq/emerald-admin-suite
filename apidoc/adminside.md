@@ -1,4 +1,4 @@
-# Deposit API - Admin Side
+# Withdrawal API - Admin Side
 
 ## Base URL
 
@@ -16,30 +16,24 @@ Authorization: Bearer <admin_token>
 
 ---
 
-## Get Deposit Orders
+## Get Withdrawal Orders
 
-**Get all orders with filters (supports userId or mobile):**
+**Get all orders with filters:**
 
 ```
-GET /admin/deposits?page=1&limit=50&status=PENDING&dateFrom=2026-03-01&dateTo=2026-03-20
+GET /admin/withdrawals?page=1&limit=50&status=PENDING&dateFrom=2026-03-01&dateTo=2026-03-20
 ```
 
 **Get orders by user:**
 
 ```
-GET /admin/deposits?userId=123456&page=1&limit=50
-```
-
-**Get orders by mobile:**
-
-```
-GET /admin/deposits?mobile=3333333333&page=1&limit=50
+GET /admin/withdrawals?userId=123456&page=1&limit=50
 ```
 
 **Get single order:**
 
 ```
-GET /admin/deposits?orderId=ODR1234567890123456
+GET /admin/withdrawals?orderId=WD1234567890123456
 ```
 
 ### Query Params
@@ -48,9 +42,8 @@ GET /admin/deposits?orderId=ODR1234567890123456
 |-------|------|---------|-------------|
 | page | number | No | Page number (default: 1) |
 | limit | number | No | Items per page (default: 50, max: 100) |
-| status | string | No | Filter: PENDING, SUCCESS, FAILED, REFUNDED, EXPIRED |
+| status | string | No | Filter: PENDING, AUDITING, SUCCESS, FAILED, CANCELLED |
 | userId | number | No | Filter by user ID |
-| mobile | string | No | Filter by 10-digit mobile number |
 | dateFrom | string | No | Start date (YYYY-MM-DD) |
 | dateTo | string | No | End date (YYYY-MM-DD) |
 | orderId | string | No | Get single order by ID |
@@ -65,69 +58,246 @@ GET /admin/deposits?orderId=ODR1234567890123456
   "limit": 50,
   "items": [
     {
-      "orderId": "ODR1234567890123456",
+      "orderId": "WD1234567890123456",
       "userId": 123456,
-      "amount": 1000.0,
+      "amount": 500.0,
+      "charge": 23.5,
       "currency": "INR",
       "status": "PENDING",
-      "gatewayOrderNo": "gw123456",
+      "paymentMethod": "UPI",
+      "paymentDetails": {
+        "upiId": "user@paytm",
+        "accountNo": "",
+        "ifsc": "",
+        "bankName": "",
+        "rplId": "",
+        "holderName": "John Doe"
+      },
       "channelName": "SimplyPay",
-      "note": "Deposit request",
+      "note": "Withdrawal request",
+      "gatewayResponse": null,
       "createdAt": "2026-03-19T10:30:00.000Z",
       "updatedAt": "2026-03-19T10:30:00.000Z"
     }
   ]
 }
+```
 
-**Note:** `_id` and `paymentLinks` are excluded from list responses.
+### Payment Types
 
-### Deposit Status Values
+| Type | Gateway | Identifier |
+|------|---------|-----------|
+| **UPI** | SimplyPay | `paymentDetails.upiId` (e.g., user@paytm) |
+| **BANK** | SimplyPay | `paymentDetails.accountNo` + `ifsc` |
+| **UPAY** | Upay | `paymentDetails.rplId` |
+
+### Withdrawal Status Values
 
 | Status | Description |
 |--------|-------------|
-| PENDING | Deposit initiated, awaiting payment confirmation |
-| SUCCESS | Payment received and credited to user wallet |
-| FAILED | Payment failed or rejected |
-| REFUNDED | Amount refunded to user |
-| EXPIRED | Payment link expired |
+| PENDING | Withdrawal requested, awaiting admin approval |
+| AUDITING | Admin approved, payout order created with gateway |
+| SUCCESS | Payout completed successfully |
+| FAILED | Payout failed (amount refunded automatically — charge was never deducted) |
+| CANCELLED | Payout cancelled/refunded (full amount returned — no charge to refund) |
 
 ---
 
-## Approve Deposit Order
+## Withdrawal Config
+
+### Get Config
 
 ```
-POST /admin/deposits/approve
-```
-
-**Body:**
-
-```json
-{
-  "orderId": "ODR1234567890123456"
-}
+GET /admin/withdrawal-config
 ```
 
 **Response:**
 
 ```json
 {
-  "msg": "Deposit approved",
-  "orderId": "ODR1234567890123456",
+  "status": "success",
+  "data": {
+    "_id": "...",
+    "key": "default",
+    "perDayLimit": 3,
+    "limits": {
+      "BANK": { "min": 110, "max": 50000 },
+      "UPI": { "min": 300, "max": 15000 },
+      "UPAY": { "min": 300, "max": 50000 }
+    }
+  }
+}
+```
+
+### Update Config
+
+```
+PUT /admin/withdrawal-config
+```
+
+**Body (partial update — only send fields to change):**
+
+```json
+{
+  "perDayLimit": 5,
+  "limits": {
+    "UPI": { "max": 20000 },
+    "BANK": { "min": 200, "max": 100000 }
+  }
+}
+```
+
+**Response:** Returns the updated config document.
+
+---
+
+## Approve Withdrawal Order
+
+```
+POST /admin/withdrawals/approve
+```
+
+**Body:**
+
+```json
+{
+  "orderId": "WD1234567890123456",
+  "chargeFrom": "user"
+}
+```
+
+| Param | Type | Required | Description |
+|-------|------|---------|-------------|
+| orderId | string | Yes | Withdrawal order ID |
+| chargeFrom | string | Yes | `"user"` or `"platform"` — who bears the 3.5% + ₹6 charge |
+
+### Charge Behavior
+
+| chargeFrom | User Wallet Deducted | Gateway Payout | Charge Recorded |
+|-----------|---------------------|----------------|-----------------|
+| `"user"` | Full amount (e.g., ₹500) | Amount - charge (e.g., ₹476.50) | Yes (on order) |
+| `"platform"` | Full amount (e.g., ₹500) | Full amount (e.g., ₹500) | No (0) |
+
+### Gateway Routing
+
+The approval automatically routes to the correct payout gateway based on `paymentMethod`:
+
+| Payment Method | Gateway | Details Sent |
+|----------------|---------|-------------|
+| **UPI** | SimplyPay | `payoutType: "UPI"`, `vpa: upiId`, `name`, `email`, `mobile` |
+| **BANK** | SimplyPay | `payoutType: "IFSC"`, `ifsc`, `account`, `name`, `email`, `mobile` |
+| **UPAY** | Upay | `rplId` as payout address |
+
+**Response (chargeFrom = "user"):**
+
+```json
+{
+  "status": "success",
+  "msg": "Withdrawal approved and payout order created",
+  "orderId": "WD1234567890123456",
   "userId": 123456,
-  "amount": 1000.0,
-  "status": "SUCCESS",
-  "firstDepositBonus": 0
+  "amount": 500.0,
+  "charge": 23.5,
+  "payoutAmount": 476.5,
+  "chargeFrom": "user",
+  "gatewayOrderNo": "dc07e03f03b94e8a9f29702863d35fd5",
+  "gatewayResponse": null,
+  "status": "AUDITING"
+}
+```
+
+**Response (chargeFrom = "platform"):**
+
+```json
+{
+  "status": "success",
+  "msg": "Withdrawal approved and payout order created",
+  "orderId": "WD1234567890123456",
+  "userId": 123456,
+  "amount": 500.0,
+  "charge": 0,
+  "payoutAmount": 500.0,
+  "chargeFrom": "platform",
+  "gatewayOrderNo": "UPAY_ORDER_CODE",
+  "gatewayResponse": null,
+  "status": "AUDITING"
+}
+```
+
+**Error (gateway failure):** The exact gateway error message is saved to `gatewayResponse` on the order and returned in the response. `chargeFrom` and `charge` are reset to allow re-approval.
+
+```json
+{
+  "status": "failed",
+  "msg": "Payout gateway error: Insufficient balance",
+  "orderId": "WD1234567890123456",
+  "gatewayError": "Payout gateway error: Insufficient balance"
+}
+```
+
+**Error (already processed — race condition protection):**
+
+```json
+{
+  "status": "failed",
+  "msg": "Cannot approve: order is in AUDITING status",
+  "currentStatus": "AUDITING"
+}
+```
+
+> ⚡ **Optimization:** The approve endpoint now uses **atomic optimistic locking** (`findOneAndUpdate` with status filter). If two admins click "approve" simultaneously on the same order, only one succeeds — the second receives HTTP `409` with the current status. This prevents double-payouts.
+
+---
+
+## Cancel Withdrawal Order
+
+```
+POST /admin/withdrawals/cancel
+```
+
+Cancels a withdrawal (PENDING or AUDITING) and refunds the full amount to user wallet (no charge was deducted). The cancelled order no longer counts toward the user's daily 3-withdrawal limit, freeing a slot for a new request. The `note` is saved on the order and visible to the user in their withdrawal history.
+
+> ⚡ **Optimizations:** 
+> - **Atomic optimistic locking** prevents race conditions if two admins cancel the same order simultaneously (returns HTTP `409`).
+> - **MongoDB transaction** wraps the refund (balance update + ledger entry) for data consistency — if the process crashes mid-refund, the entire operation rolls back.
+
+**Body:**
+
+```json
+{
+  "orderId": "WD1234567890123456",
+  "note": "Customer requested cancellation via support"
+}
+```
+
+| Param | Type | Required | Description |
+|-------|------|---------|-------------|
+| orderId | string | Yes | Withdrawal order ID |
+| note | string | No | Custom cancellation reason (default: "Cancelled by admin") |
+
+**Response:**
+
+```json
+{
+  "status": "success",
+  "msg": "Withdrawal cancelled and refunded",
+  "orderId": "WD1234567890123456",
+  "userId": 123456,
+  "amount": 500.0,
+  "charge": 0,
+  "refundAmount": 500.0,
+  "note": "Customer requested cancellation via support"
 }
 ```
 
 ---
 
-## Deposit Channel Config
+## User Payment Methods (Admin)
 
-### Get All Channels
+### List User Payment Methods
 
 ```
-GET /admin/deposit-config
+GET /admin/user/payment-methods?userId=123456
 ```
 
 **Response:**
@@ -137,54 +307,35 @@ GET /admin/deposit-config
   "status": "success",
   "data": [
     {
-      "channel": "simplypay",
-      "name": "SimplyPay",
+      "_id": "...",
+      "userId": 123456,
+      "type": "UPI",
+      "upiId": "user@paytm",
+      "holderName": "John Doe",
+      "isDefault": true,
       "isActive": true,
-      "minAmount": 100,
-      "maxAmount": 100000,
-      "exchangeRate": 1,
-      "sortOrder": 0,
-      "description": "UPI / Bank Transfer"
-    },
-    {
-      "channel": "gspayusdt",
-      "name": "USDT",
-      "isActive": true,
-      "minAmount": 1,
-      "maxAmount": 1000,
-      "exchangeRate": 90,
-      "sortOrder": 2,
-      "description": "USDT (Tether)"
+      "createdAt": "2026-03-19T10:30:00.000Z"
     }
   ]
 }
 ```
 
-### Update a Channel
+### Update User Payment Method
 
 ```
-PUT /admin/deposit-config/:channel
+PUT /admin/user/payment-methods/:id
 ```
 
-**Body (all fields optional):**
+**Body:**
 
 ```json
 {
-  "isActive": false,
-  "minAmount": 500,
-  "maxAmount": 100000
+  "upiId": "newuser@paytm",
+  "holderName": "John Updated",
+  "isDefault": true,
+  "isActive": false
 }
 ```
-
-| Param | Type | Description |
-|-------|------|-------------|
-| isActive | boolean | Enable/disable the channel |
-| minAmount | number | Minimum deposit amount |
-| maxAmount | number | Maximum deposit amount |
-| exchangeRate | number | Exchange rate (e.g., 90 for USDT → INR) |
-| name | string | Display name |
-| description | string | Channel description |
-| sortOrder | number | Display order |
 
 **Response:**
 
@@ -192,15 +343,31 @@ PUT /admin/deposit-config/:channel
 {
   "status": "success",
   "data": {
-    "channel": "simplypay",
-    "name": "SimplyPay",
-    "isActive": false,
-    "minAmount": 500,
-    "maxAmount": 100000,
-    "sortOrder": 0,
-    "description": "UPI / Bank Transfer",
-    "createdAt": "2026-05-29T12:41:09.804Z",
-    "updatedAt": "2026-05-29T12:41:09.804Z"
+    "_id": "...",
+    "userId": 123456,
+    "type": "UPI",
+    "upiId": "newuser@paytm",
+    "holderName": "John Updated",
+    "isDefault": true,
+    "isActive": false
   }
+}
+```
+
+### Update User Bank Account (Legacy)
+
+```
+PUT /admin/user/bind-bank
+```
+
+**Body:**
+
+```json
+{
+  "userId": 123456,
+  "bankName": "SBI",
+  "bankCode": "SBIN",
+  "accountNumber": "1234567890",
+  "accountHolder": "John Doe"
 }
 ```
